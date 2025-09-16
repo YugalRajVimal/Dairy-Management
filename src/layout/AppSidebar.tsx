@@ -5,10 +5,10 @@ import { Link, useLocation } from "react-router";
 import {
   ArrowDownIcon,
   ChevronDownIcon,
-  FileIcon,
+
   GridIcon,
   HorizontaLDots,
-  ListIcon,
+
   UserCircleIcon,
   UserIcon,
 } from "../icons";
