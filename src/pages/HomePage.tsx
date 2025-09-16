@@ -16,12 +16,12 @@ const HomePage = () => {
 
         {/* Buttons */}
         <div className="flex flex-col md:flex-row gap-4 justify-center">
-          <Link to="/admin/signin">
+          <Link to="/admin">
             <Button className="w-full md:w-auto px-6 py-3 text-lg bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-lg transition">
               Admin Login
             </Button>
           </Link>
-          <Link to="/sub-admin/signin">
+          <Link to="/sub-admin">
             <Button className="w-full md:w-auto px-6 py-3 text-lg bg-gray-800 hover:bg-gray-900 text-white rounded-xl shadow-lg transition">
               Sub Admin Login
             </Button>
