@@ -5,7 +5,7 @@ import ExcelSheetsDetailedList from "./ExcelSheetDetailedList";
 const SubAdminExcelSheetView = () => {
   return (
     <div className="space-y-6">
-      <PageBreadcrumb pageTitle="Excel Sheet View" />
+      <PageBreadcrumb pageTitle="Uploaded Milk Report" />
       <div className="space-y-6">
         {/* <ComponentCard title="Excel Sheet View"> */}
         <ExcelSheetsDetailedList />

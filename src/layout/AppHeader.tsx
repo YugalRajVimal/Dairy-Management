@@ -94,7 +94,7 @@ const AppHeader: React.FC = () => {
               src="./images/logo/logo-dark.svg"
               alt="Logo"
             /> */}
-              <span className="text-3xl font-bold">ADMIN</span>
+              <span className="text-3xl font-bold dark:text-white">ADMIN</span>
 
           </Link>
 

@@ -21,31 +21,31 @@ const excelSheetData: ExcelSheet[] = [
     id: 1,
     uploadDate: "2023-01-15",
     rowsCount: 1200,
-    link: "/sub-admin/excel-sheet-view/0",
+    link: "/sub-admin/milk-report-view",
   },
   {
     id: 2,
     uploadDate: "2023-02-20",
     rowsCount: 850,
-    link: "/sub-admin/excel-sheet-view/0",
+    link: "/sub-admin/milk-report-view",
   },
   {
     id: 3,
     uploadDate: "2023-03-10",
     rowsCount: 2100,
-    link: "/sub-admin/excel-sheet-view/0",
+    link: "/sub-admin/milk-report-view",
   },
   {
     id: 4,
     uploadDate: "2023-04-05",
     rowsCount: 930,
-    link: "/sub-admin/excel-sheet-view/0",
+    link: "/sub-admin/milk-report-view",
   },
   {
     id: 5,
     uploadDate: "2023-05-18",
     rowsCount: 1500,
-    link: "/sub-admin/excel-sheet-view/0",
+    link: "/sub-admin/milk-report-view",
   },
 ];
 

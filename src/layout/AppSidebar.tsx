@@ -4,18 +4,15 @@ import { Link, useLocation } from "react-router";
 // Assume these icons are imported from an icon library
 import {
   ArrowDownIcon,
-
   ChevronDownIcon,
   FileIcon,
   GridIcon,
   HorizontaLDots,
   ListIcon,
-
   UserCircleIcon,
   UserIcon,
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
-
 
 type NavItem = {
   name: string;
@@ -28,32 +25,32 @@ const navItems: NavItem[] = [
   {
     icon: <GridIcon />,
     name: "Dashboard",
-    path: "/",
+    path: "/admin",
   },
   {
     icon: <ArrowDownIcon />,
     name: "Onboard Sub Admin",
-    path: "/onboard-sub-admin",
+    path: "/admin/onboard-sub-admin",
   },
   {
     icon: <UserIcon />,
     name: "All Sub Admins",
-    path: "/all-sub-admins",
+    path: "/admin/all-sub-admins",
   },
-  {
-    icon: <FileIcon />,
-    name: "Excel Sheet View",
-    path: "/excel-sheet-view/0",
-  },
-  {
-    icon: <ListIcon />,
-    name: "All Sub Admin's Excel Sheets",
-    path: "/all-excel-sheet/0",
-  },
+  // {
+  //   icon: <FileIcon />,
+  //   name: "Excel Sheet View",
+  //   path: "/admin/milk-report-view",
+  // },
+  // {
+  //   icon: <ListIcon />,
+  //   name: "All Sub Admin's Excel Sheets",
+  //   path: "/admin/all-excel-sheet/0",
+  // },
   {
     icon: <UserCircleIcon />,
     name: "Admin Profile",
-    path: "/profile",
+    path: "/admin/profile",
   },
 
   // {

@@ -7,6 +7,7 @@ import Button from "../../../components/ui/button/Button";
 import Alert from "../../../components/ui/alert/Alert";
 import ComponentCard from "../../../components/common/ComponentCard";
 import PageBreadcrumb from "../../../components/common/PageBreadCrumb";
+import axios from "axios";
 
 const countries = [
   { code: "IN", label: "+91" },
@@ -25,6 +26,8 @@ interface AlertState {
 }
 
 const OnboardVendor = () => {
+  const [vendorCode, setVendorCode] = useState<string | undefined>(undefined);
+
   const [email, setEmail] = useState<string | undefined>(undefined);
   const [phoneNo, setPhoneNo] = useState<string | undefined>(undefined);
   const [name, setName] = useState<string | undefined>(undefined);
@@ -55,12 +58,35 @@ const OnboardVendor = () => {
       message: "",
     });
 
+    // Vendor Code validation
+    if (!vendorCode) {
+      setAlert({
+        isEnable: true,
+        variant: "error",
+        title: "Missing Vendor Code",
+        message: "Please enter the Vendor Code.",
+      });
+      return;
+    }
+
+    // Basic vendor code validation (e.g., 6 digits, adjust as needed)
+    const vendorCodeRegex = /^\d{6}$/;
+    if (!vendorCodeRegex.test(vendorCode)) {
+      setAlert({
+        isEnable: true,
+        variant: "error",
+        title: "Invalid Vendor Code",
+        message: "Please enter a valid 6-digit Vendor Code.",
+      });
+      return;
+    }
+
     if (!name) {
       setAlert({
         isEnable: true,
         variant: "error",
         title: "Missing Name",
-        message: "Please enter the Sub Admin's name.",
+        message: "Please enter the Vendor's name.",
       });
       return;
     }
@@ -70,7 +96,7 @@ const OnboardVendor = () => {
         isEnable: true,
         variant: "error",
         title: "Missing Email",
-        message: "Please enter the Sub Admin's email.",
+        message: "Please enter the Vendor's email.",
       });
       return;
     }
@@ -92,19 +118,21 @@ const OnboardVendor = () => {
         isEnable: true,
         variant: "error",
         title: "Missing Phone Number",
-        message: "Please enter the Sub Admin's phone number.",
+        message: "Please enter the Vendor's phone number.",
       });
       return;
     }
 
     // Assuming phoneNo includes country code and is 13 chars long, e.g., +911234567890
+    // This validation might need adjustment based on the PhoneInput component's output format
+    // For now, keeping the existing logic.
     if (phoneNo.length !== 13) {
       setAlert({
         isEnable: true,
         variant: "error",
         title: "Invalid Phone Number",
         message:
-          "Phone number must be 10 digits long (including country code, e.g., +91XXXXXXXXXX).",
+          "Phone number must be 10 digits long (excluding country code, e.g., +91XXXXXXXXXX).",
       });
       return;
     }
@@ -115,7 +143,7 @@ const OnboardVendor = () => {
         isEnable: true,
         variant: "error",
         title: "Missing Address Line",
-        message: "Please enter the Sub Admin's address line.",
+        message: "Please enter the Vendor's address line.",
       });
       return;
     }
@@ -125,7 +153,7 @@ const OnboardVendor = () => {
         isEnable: true,
         variant: "error",
         title: "Missing City",
-        message: "Please enter the Sub Admin's city.",
+        message: "Please enter the Vendor's city.",
       });
       return;
     }
@@ -135,7 +163,7 @@ const OnboardVendor = () => {
         isEnable: true,
         variant: "error",
         title: "Missing State",
-        message: "Please enter the Sub Admin's state.",
+        message: "Please enter the Vendor's state.",
       });
       return;
     }
@@ -145,7 +173,7 @@ const OnboardVendor = () => {
         isEnable: true,
         variant: "error",
         title: "Missing Pin Code",
-        message: "Please enter the Sub Admin's pin code.",
+        message: "Please enter the Vendor's pin code.",
       });
       return;
     }
@@ -163,7 +191,8 @@ const OnboardVendor = () => {
     }
 
     // If all validations pass
-    console.log("Sub-admin data is valid:");
+    console.log("Vendor data is valid:");
+    console.log("Vendor Code:", vendorCode);
     console.log("Name:", name);
     console.log("Email:", email);
     console.log("Phone No:", phoneNo);
@@ -172,42 +201,62 @@ const OnboardVendor = () => {
     console.log("State:", state);
     console.log("Pin Code:", pinCode);
 
-    // Here you would typically make an API call to onboard the sub-admin
-    // For example:
-    // try {
-    //   const response = await fetch('/api/onboard-sub-admin', {
-    //     method: 'POST',
-    //     headers: {
-    //       'Content-Type': 'application/json',
-    //     },
-    //     body: JSON.stringify({ name, email, phoneNo, addressLine, city, state, pinCode }), // Updated body
-    //   });
-    //   const data = await response.json();
-    //   if (response.ok) {
-    //     setAlert({
-    //       isEnable: true,
-    //       variant: "success",
-    //       title: "Success",
-    //       message: "Sub-admin onboarded successfully!",
-    //     });
-    //     // Optionally clear form or redirect
-    //   } else {
-    //     setAlert({
-    //       isEnable: true,
-    //       variant: "error",
-    //       title: "Onboarding Failed",
-    //       message: `Failed to onboard sub-admin: ${data.message || response.statusText}`,
-    //     });
-    //   }
-    // } catch (error) {
-    //   console.error("Error onboarding sub-admin:", error);
-    //   setAlert({
-    //     isEnable: true,
-    //     variant: "error",
-    //     title: "Network Error",
-    //     message: "An error occurred while onboarding the sub-admin. Please try again.",
-    //   });
-    // }
+    try {
+      const token = localStorage.getItem("sub-admin-token");
+
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/sub-admin/onboard-vendor`,
+        {
+          vendorId: vendorCode, // backend expects vendorId, not vendorCode
+          name,
+          email,
+          phoneNumber: phoneNo, // backend expects phoneNumber
+          addressLine,
+          city,
+          state,
+          pincode: pinCode, // backend expects pincode, not pinCode
+        },
+        {
+          headers: {
+            Authorization: `${token}`, // send token for auth
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.status === 201) {
+        setAlert({
+          isEnable: true,
+          variant: "success",
+          title: "Success",
+          message: response.data.message || "Vendor onboarded successfully!",
+        });
+
+        // Optionally clear form after success
+        setVendorCode("");
+        setName("");
+        setEmail("");
+        setPhoneNo("");
+        setAddressLine("");
+        setCity("");
+        setState("");
+        setPinCode("");
+      }
+    } catch (error: any) {
+      console.error("Error onboarding vendor:", error);
+
+      let message =
+        error.response?.data?.message ||
+        error.message ||
+        "An error occurred while onboarding the vendor.";
+
+      setAlert({
+        isEnable: true,
+        variant: "error",
+        title: "Onboarding Failed",
+        message,
+      });
+    }
   };
 
   return (
@@ -222,6 +271,18 @@ const OnboardVendor = () => {
               message={alert.message}
             />
           )}
+          <div>
+            <Label>Vendor Code</Label>
+            <div className="relative">
+              <Input
+                placeholder="e.g., 123456"
+                type="text"
+                name="vendorCode"
+                value={vendorCode}
+                onChange={(e) => setVendorCode(e.target.value)}
+              />
+            </div>
+          </div>
           <div>
             <Label>Name</Label>
             <div className="relative">
@@ -312,9 +373,7 @@ const OnboardVendor = () => {
               />
             </div>
           </div>
-          <Button onClick={handleOnboardVendor}>
-            Handle Onboard Vendor
-          </Button>
+          <Button onClick={handleOnboardVendor}>Handle Onboard Vendor</Button>
         </ComponentCard>
       </div>
     </div>

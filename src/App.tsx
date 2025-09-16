@@ -20,7 +20,6 @@ import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/AdminPages/Dashboard/Home";
 import SubAdminSignIn from "./pages/AdminPages/AuthPages/SubAdmin/SignIn";
-import VendorSignUp from "./pages/AdminPages/AuthPages/Vendor/SignUp";
 import OnboardSubAdmin from "./pages/AdminPages/OnboardSubAdmin/OnboardSubAdmin";
 import AllSubAdmins from "./pages/AdminPages/AllSubAdmins/AllSubAdmins";
 import ExcelSheetView from "./pages/AdminPages/ExcelSheetDetails/ExcelSheetView";
@@ -30,9 +29,15 @@ import SubAdminHome from "./pages/SubAdminPages/Dashboard/Home";
 import SubAdminProfiles from "./pages/SubAdminPages/UserProfiles";
 import AllVendors from "./pages/SubAdminPages/AllVendors/AllVendors";
 import OnboardVendor from "./pages/SubAdminPages/OnboardVendor/OnboardVendor";
-import UploadedExcelSheets from "./pages/SubAdminPages/UploadedExcelSheets/UploadedExcelSheets";
-import SubAdminExcelSheetView from "./pages/SubAdminPages/ExcelSheetDetails/ExcelSheetView";
-import UploadExcelSheet from "./pages/SubAdminPages/UploadExcelSheet/UploadExcelSheet";
+// import UploadedExcelSheets from "./pages/SubAdminPages/UploadedExcelSheets/UploadedExcelSheets";
+import SubAdminExcelSheetView from "./pages/SubAdminPages/MilkReport/ExcelSheetView";
+import UploadExcelSheet from "./pages/SubAdminPages/UploadData/UploadExcelSheet";
+import UploadSalesSheet from "./pages/SubAdminPages/UploadData/UploadSalesReport";
+import ManageAssets from "./pages/SubAdminPages/UploadData/ManageAssets";
+import HomePage from "./pages/HomePage";
+
+import SubAdminAssetsSheetView from "./pages/SubAdminPages/AssetsReport/AssetsReportView";
+import SubAdminSalesSheetView from "./pages/SubAdminPages/SalesReport/SalesReportView";
 
 export default function App() {
   return (
@@ -40,29 +45,34 @@ export default function App() {
       <Router>
         <ScrollToTop />
         <Routes>
+          <Route index path="/" element={<HomePage />} />
           {/* Dashboard Layout */}
           <Route element={<AppLayout />}>
-            <Route index path="/" element={<Home />} />
+            <Route index path="/admin" element={<Home />} />
             <Route
               index
-              path="/onboard-sub-admin"
+              path="/admin/onboard-sub-admin"
               element={<OnboardSubAdmin />}
             />
-            <Route index path="/all-sub-admins" element={<AllSubAdmins />} />
+            <Route
+              index
+              path="/admin/all-sub-admins"
+              element={<AllSubAdmins />}
+            />
 
             <Route
               index
-              path="/excel-sheet-view/:id"
+              path="/admin/excel-sheet-view/:id"
               element={<ExcelSheetView />}
             />
             <Route
               index
-              path="/all-excel-sheet/:id"
+              path="/admin/all-excel-sheet/:id"
               element={<SubAdminUploadedExcelSheets />}
             />
 
             {/* Others Page */}
-            <Route path="/profile" element={<UserProfiles />} />
+            <Route path="/admin/profile" element={<UserProfiles />} />
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/blank" element={<Blank />} />
 
@@ -100,13 +110,35 @@ export default function App() {
             />
             <Route
               index
-              path="/sub-admin/all-excel-sheet/:id"
-              element={<UploadedExcelSheets />}
+              path="/sub-admin/upload-sales-report"
+              element={<UploadSalesSheet />}
             />
             <Route
               index
-              path="/sub-admin/excel-sheet-view/:id"
+              path="/sub-admin/manage-assets"
+              element={<ManageAssets />}
+            />
+            {/* <Route
+              index
+              path="/sub-admin/all-excel-sheet/:id"
+              element={<UploadedExcelSheets />}
+            /> */}
+            <Route
+              index
+              path="/sub-admin/excel-sheet-view"
               element={<SubAdminExcelSheetView />}
+            />
+
+            <Route
+              index
+              path="/sub-admin/sales-report-view"
+              element={<SubAdminSalesSheetView />}
+            />
+
+            <Route
+              index
+              path="/sub-admin/asstes-report-view"
+              element={<SubAdminAssetsSheetView />}
             />
 
             {/* Others Page */}
@@ -114,12 +146,10 @@ export default function App() {
           </Route>
 
           {/* Auth Layout */}
-          <Route path="/signin" element={<SignIn />} />
+          <Route path="/admin/signin" element={<SignIn />} />
           {/* <Route path="/signup" element={<SignUp />} /> */}
           <Route path="/sub-admin/signin" element={<SubAdminSignIn />} />
           {/* <Route path="/sub-admin/signup" element={<SubAdminSignUpForm />} /> */}
-          <Route path="/vendor/signin" element={<VendorSignUp />} />
-          {/* <Route path="/vendor/signup" element={<VendorSignUpForm />} /> */}
 
           {/* Fallback Route */}
           <Route path="*" element={<NotFound />} />

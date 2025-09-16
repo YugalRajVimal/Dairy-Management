@@ -3,6 +3,8 @@ import { Outlet } from "react-router";
 import SubAdminAppSidebar from "./AppSidebar";
 import SubAdminBackdrop from "./Backdrop";
 import SubAdminAppHeader from "./AppHeader";
+import axios from "axios";
+import { useEffect, useState } from "react";
 
 const LayoutContent: React.FC = () => {
   const { isExpanded, isHovered, isMobileOpen } = useSidebar();
@@ -28,6 +30,58 @@ const LayoutContent: React.FC = () => {
 };
 
 const SubAdminAppLayout: React.FC = () => {
+  const [isSubAdminAuthenticated, setIsSubAdminAuthenticated] = useState<
+    boolean | null
+  >(null);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const token = localStorage.getItem("sub-admin-token");
+        if (!token) {
+          setIsSubAdminAuthenticated(false);
+          if (window.location.pathname.startsWith("/sub-admin")) {
+            window.location.href = "/sub-admin/signin";
+          }
+          return;
+        }
+
+        const res = await axios.post(
+          `${import.meta.env.VITE_API_URL}/api/auth`,
+          {},
+          {
+            headers: { Authorization: `${token}` },
+          }
+        );
+
+        if (res.status === 200) {
+          setIsSubAdminAuthenticated(true);
+          // redirect only if logged in but not already on an admin page
+          if (window.location.pathname === "/sub-admin/signin") {
+            window.location.href = "/sub-admin";
+          }
+        } else {
+          setIsSubAdminAuthenticated(false);
+          window.location.href = "/sub-admin/signin";
+        }
+      } catch (err) {
+        console.error("Auth check failed:", err);
+        setIsSubAdminAuthenticated(false);
+        window.location.href = "/sub-admin/signin";
+      }
+    };
+
+    checkAuth();
+  }, []);
+
+  if (isSubAdminAuthenticated === null || !isSubAdminAuthenticated) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-900">
+        <div className="w-40 h-40 border-4 border-t-4 border-gray-200 border-t-brand-500 rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
   return (
     <SidebarProvider>
       <LayoutContent />

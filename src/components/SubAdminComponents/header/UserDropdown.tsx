@@ -1,7 +1,7 @@
 import { useState } from "react";
 
-import { Dropdown } from "../ui/dropdown/Dropdown";
-import { UserCircleIcon } from "../../icons";
+import { Dropdown } from "../../ui/dropdown/Dropdown";
+import { UserCircleIcon } from "../../../icons";
 
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
@@ -14,8 +14,8 @@ export default function UserDropdown() {
     setIsOpen(false);
   }
   const handleLogout = () => {
-    localStorage.removeItem("admin-token");
-    window.location.href = "/admin/signin"; // Redirect to sign-in page
+    localStorage.removeItem("sub-admin-token");
+    window.location.href = "/sub-admin/signin"; // Redirect to sign-in page
   };
   return (
     <div className="relative">

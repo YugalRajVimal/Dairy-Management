@@ -5,17 +5,15 @@ import { Link, useLocation } from "react-router";
 import {
   ArrowDownIcon,
   ArrowUpIcon,
-
   ChevronDownIcon,
   FileIcon,
   GridIcon,
   HorizontaLDots,
-  ListIcon,
+
   UserCircleIcon,
   UserIcon,
 } from "../../icons";
 import { useSidebar } from "../../context/SidebarContext";
-
 
 type NavItem = {
   name: string;
@@ -42,18 +40,39 @@ const navItems: NavItem[] = [
   },
   {
     icon: <ArrowUpIcon />,
-    name: "Upload Excel Sheet",
+    name: "Upload Milk Reports",
     path: "/sub-admin/upload-excel-sheet",
   },
   {
-    icon: <ListIcon />,
-    name: "Uploaded Excel Sheets",
-    path: "/sub-admin/all-excel-sheet/0",
+    icon: <ArrowUpIcon />,
+    name: "Upload Sales Reports",
+    path: "/sub-admin/upload-sales-report",
+  },
+  {
+    icon: <ArrowUpIcon />,
+    name: "Manage assets",
+    path: "/sub-admin/manage-assets",
+  },
+
+  // {
+  //   icon: <ListIcon />,
+  //   name: "Uploaded Milk Reports",
+  //   path: "/sub-admin/all-excel-sheet/0",
+  // },
+  {
+    icon: <FileIcon />,
+    name: "Uploaded Milk Report",
+    path: "/sub-admin/excel-sheet-view",
   },
   {
     icon: <FileIcon />,
-    name: "Excel Sheet View",
-    path: "/sub-admin/excel-sheet-view/0",
+    name: "Uploaded Sales Report",
+    path: "/sub-admin/sales-report-view",
+  },
+  {
+    icon: <FileIcon />,
+    name: "Uploaded Assets Report",
+    path: "/sub-admin/asstes-report-view",
   },
 
   {
