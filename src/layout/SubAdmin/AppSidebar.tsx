@@ -49,6 +49,12 @@ const navItems: NavItem[] = [
     path: "/sub-admin/upload-sales-report",
   },
   {
+    icon: <HorizontaLDots />,
+    name: "Assets Inventory",
+    path: "/sub-admin/assets-inventory",
+  },
+  
+  {
     icon: <ArrowUpIcon />,
     name: "Manage assets",
     path: "/sub-admin/manage-assets",

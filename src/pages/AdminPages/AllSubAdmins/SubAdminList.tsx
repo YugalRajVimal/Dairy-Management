@@ -8,6 +8,8 @@ import {
   TableRow,
 } from "../../../components/ui/table";
 import { UserCircleIcon } from "../../../icons";
+import Button from "../../../components/ui/button/Button";
+import { Link } from "react-router";
 
 // Interface for Vendors
 interface SubAdmins {
@@ -79,6 +81,12 @@ export default function SubAdminList() {
           {/* Table Header */}
           <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
             <TableRow>
+            <TableCell
+                isHeader
+                className="px-5 py-3 text-start text-gray-500"
+              >
+                Sub Admin Id
+              </TableCell>
               <TableCell
                 isHeader
                 className="px-5 py-3 text-start text-gray-500"
@@ -116,6 +124,12 @@ export default function SubAdminList() {
               >
                 Pin Code
               </TableCell>
+              <TableCell
+                isHeader
+                className="px-5 py-3 text-start text-gray-500"
+              >
+                Action
+              </TableCell>
             </TableRow>
           </TableHeader>
 
@@ -123,6 +137,9 @@ export default function SubAdminList() {
           <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
             {subadmins.map((subadmin) => (
               <TableRow key={subadmin._id}>
+                <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
+                  {subadmin._id}
+                </TableCell>
                 <TableCell className="px-5 py-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 flex justify-center items-center rounded-full">
@@ -159,6 +176,20 @@ export default function SubAdminList() {
                 </TableCell>
                 <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
                   {subadmin.address?.pincode}
+                </TableCell>
+                <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
+                  {/* <a
+                    href="/admin/issue-assets-to-sub-admin"
+                    
+                  >
+                    <Button>Issue Assets</Button>
+                  </a> */}
+                  <Link
+                    to="/admin/issue-assets-to-sub-admin"
+                    state={{ subAdminId: subadmin._id }} // <-- pass the ID here
+                  >
+                    <Button>Issue Assets</Button>
+                  </Link>
                 </TableCell>
               </TableRow>
             ))}

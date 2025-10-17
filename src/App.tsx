@@ -38,6 +38,9 @@ import HomePage from "./pages/HomePage";
 
 import SubAdminAssetsSheetView from "./pages/SubAdminPages/AssetsReport/AssetsReportView";
 import SubAdminSalesSheetView from "./pages/SubAdminPages/SalesReport/SalesReportView";
+import AdminIssuedAssetsSheetView from "./pages/AdminPages/IssuedAssets/IssuedAssetsView";
+import IssueAssetsToSubAdmin from "./pages/AdminPages/IssuedAssets/IssueAssetsToSubAdmin";
+import AssetsInInventory from "./pages/SubAdminPages/AssetsReport/AssetsInInventory";
 
 export default function App() {
   return (
@@ -58,6 +61,18 @@ export default function App() {
               index
               path="/admin/all-sub-admins"
               element={<AllSubAdmins />}
+            />
+
+            <Route
+              index
+              path="/admin/issued-assets-report"
+              element={<AdminIssuedAssetsSheetView />}
+            />
+
+            <Route
+              index
+              path="/admin/issue-assets-to-sub-admin"
+              element={<IssueAssetsToSubAdmin />}
             />
 
             <Route
@@ -112,6 +127,11 @@ export default function App() {
               index
               path="/sub-admin/upload-sales-report"
               element={<UploadSalesSheet />}
+            />
+             <Route
+              index
+              path="/sub-admin/assets-inventory"
+              element={<AssetsInInventory />}
             />
             <Route
               index
