@@ -82,6 +82,9 @@ export default function VendorsList() {
                 Name
               </TableCell>
               <TableCell isHeader className="px-5 py-3 text-start text-gray-500">
+                Vendor Id
+              </TableCell>
+              <TableCell isHeader className="px-5 py-3 text-start text-gray-500">
                 Email & Phone No.
               </TableCell>
               <TableCell isHeader className="px-5 py-3 text-start text-gray-500">
@@ -112,6 +115,9 @@ export default function VendorsList() {
                       {vendor.name}
                     </span>
                   </div>
+                </TableCell>
+                <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
+                  {vendor.vendorId}
                 </TableCell>
                 <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
                   <a
