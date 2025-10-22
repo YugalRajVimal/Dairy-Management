@@ -13,6 +13,7 @@ import { UserCircleIcon } from "../../../icons";
 interface Vendor {
   _id: string;
   name: string;
+  vendorId: string;
   email: string;
   phoneNo: string;
   address: {
@@ -78,25 +79,46 @@ export default function VendorsList() {
           {/* Table Header */}
           <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
             <TableRow>
-              <TableCell isHeader className="px-5 py-3 text-start text-gray-500">
+              <TableCell
+                isHeader
+                className="px-5 py-3 text-start text-gray-500"
+              >
                 Name
               </TableCell>
-              <TableCell isHeader className="px-5 py-3 text-start text-gray-500">
+              <TableCell
+                isHeader
+                className="px-5 py-3 text-start text-gray-500"
+              >
                 Vendor Id
               </TableCell>
-              <TableCell isHeader className="px-5 py-3 text-start text-gray-500">
+              <TableCell
+                isHeader
+                className="px-5 py-3 text-start text-gray-500"
+              >
                 Email & Phone No.
               </TableCell>
-              <TableCell isHeader className="px-5 py-3 text-start text-gray-500">
+              <TableCell
+                isHeader
+                className="px-5 py-3 text-start text-gray-500"
+              >
                 Address Line
               </TableCell>
-              <TableCell isHeader className="px-5 py-3 text-start text-gray-500">
+              <TableCell
+                isHeader
+                className="px-5 py-3 text-start text-gray-500"
+              >
                 City
               </TableCell>
-              <TableCell isHeader className="px-5 py-3 text-start text-gray-500">
+              <TableCell
+                isHeader
+                className="px-5 py-3 text-start text-gray-500"
+              >
                 State
               </TableCell>
-              <TableCell isHeader className="px-5 py-3 text-start text-gray-500">
+              <TableCell
+                isHeader
+                className="px-5 py-3 text-start text-gray-500"
+              >
                 Pin Code
               </TableCell>
             </TableRow>
