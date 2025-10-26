@@ -19,8 +19,8 @@ interface AssetReport {
   vlcCode: string;
   srNo?: string;
   stockNo?: string;
-  rt?: string;
-  duplicate?: string;
+  rt?: number | string; // Changed to number | string
+  duplicate?: number | string; // Changed to number | string
   vlcName?: string;
   status?: string;
   cStatus?: string;
@@ -38,7 +38,7 @@ interface AssetReport {
   ews?: number | string;
   display?: number | string;
   battery?: number | string;
-  bond?: number | string;
+  bond?: string; // Changed from number | string to string
   vspSign?: number | string;
 
   dps?: string;
@@ -81,8 +81,9 @@ export default function ManageAssets() {
         "ews",
         "display",
         "battery",
-        "bond",
         "vspSign",
+        "rt", // Added 'rt'
+        "duplicate", // Added 'duplicate'
       ];
 
       if (numericFields.includes(field as string)) {
@@ -319,7 +320,7 @@ export default function ManageAssets() {
             <Label>RT</Label>
             <Input
               placeholder="e.g., 1"
-              type="text"
+              type="number" // Changed to number
               min="0"
               value={formData.rt !== undefined ? formData.rt : ""}
               onChange={(e) => handleChange("rt", e.target.value)}
@@ -329,7 +330,7 @@ export default function ManageAssets() {
             <Label>Duplicate</Label>
             <Input
               placeholder="e.g., 0"
-              type="text"
+              type="number" // Changed to number
               min="0"
               value={formData.duplicate !== undefined ? formData.duplicate : ""}
               onChange={(e) => handleChange("duplicate", e.target.value)}
@@ -520,26 +521,6 @@ export default function ManageAssets() {
               type="text"
               value={formData.vspSign !== undefined ? formData.vspSign : ""}
               onChange={(e) => handleChange("vspSign", e.target.value)}
-            />
-          </div>
-
-          {/* Duplicate Status and DPS fields (as per original code) */}
-          <div>
-            <Label>Status</Label>
-            <Input
-              placeholder="e.g., Running"
-              type="text"
-              value={formData.status !== undefined ? formData.status : ""}
-              onChange={(e) => handleChange("status", e.target.value)}
-            />
-          </div>
-          <div>
-            <Label>DPS</Label>
-            <Input
-              placeholder="e.g., DPS001"
-              type="text"
-              value={formData.dps !== undefined ? formData.dps : ""}
-              onChange={(e) => handleChange("dps", e.target.value)}
             />
           </div>
 
