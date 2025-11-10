@@ -27,7 +27,6 @@ interface AlertState {
 
 const OnboardSubAdmin = () => {
   const [nickName, setNickName] = useState<string | undefined>(undefined);
-
   const [email, setEmail] = useState<string | undefined>(undefined);
   const [phoneNo, setPhoneNo] = useState<string | undefined>(undefined);
   const [name, setName] = useState<string | undefined>(undefined);
@@ -36,6 +35,8 @@ const OnboardSubAdmin = () => {
   const [city, setCity] = useState<string | undefined>(undefined);
   const [state, setState] = useState<string | undefined>(undefined);
   const [pinCode, setPinCode] = useState<string | undefined>(undefined);
+  // New state variable for zone
+  const [zone, setZone] = useState<string | undefined>(undefined);
 
   const [alert, setAlert] = useState<AlertState>({
     isEnable: false, // Initially disabled, only show when an alert occurs
@@ -68,8 +69,6 @@ const OnboardSubAdmin = () => {
       });
       return;
     }
-
-
 
     if (!name) {
       setAlert({
@@ -168,6 +167,17 @@ const OnboardSubAdmin = () => {
       return;
     }
 
+    // Validate zone
+    if (!zone) {
+      setAlert({
+        isEnable: true,
+        variant: "error",
+        title: "Missing Zone",
+        message: "Please enter the Zone.",
+      });
+      return;
+    }
+
     // Basic pin code validation (e.g., 6 digits for India, adjust as needed)
     const pinCodeRegex = /^\d{6}$/;
     if (!pinCodeRegex.test(pinCode)) {
@@ -190,6 +200,7 @@ const OnboardSubAdmin = () => {
     console.log("City:", city);
     console.log("State:", state);
     console.log("Pin Code:", pinCode);
+    console.log("Zone:", zone);
 
     try {
       const token = localStorage.getItem("admin-token");
@@ -205,6 +216,7 @@ const OnboardSubAdmin = () => {
           city,
           state,
           pincode: pinCode, // backend expects pincode, not pinCode
+          zone, // NEW: zone
         },
         {
           headers: {
@@ -231,6 +243,7 @@ const OnboardSubAdmin = () => {
         setCity("");
         setState("");
         setPinCode("");
+        setZone("");
       }
     } catch (error: any) {
       console.error("Error onboarding vendor:", error);
@@ -313,8 +326,20 @@ const OnboardSubAdmin = () => {
               placeholder="+1 (555) 000-0000"
               onChange={handlePhoneNumberChange}
             />
-          </div>{" "}
+          </div>
           {/* New Address Fields */}
+          <div>
+            <Label>Zone</Label>
+            <div className="relative">
+              <Input
+                placeholder="Zone/Region"
+                type="text"
+                name="zone"
+                value={zone}
+                onChange={(e) => setZone(e.target.value)}
+              />
+            </div>
+          </div>
           <div>
             <Label>Address Line</Label>
             <div className="relative">

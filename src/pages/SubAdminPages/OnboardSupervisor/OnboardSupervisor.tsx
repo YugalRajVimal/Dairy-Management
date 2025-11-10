@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Label from "../../../components/form/Label";
 import Input from "../../../components/form/input/InputField";
 import { EnvelopeIcon, UserCircleIcon } from "../../../icons";
@@ -17,11 +17,6 @@ const countries = [
   { code: "AU", label: "+61" },
 ];
 
-interface RouteType {
-  _id: string;
-  route: string;
-}
-
 // Define the type for the error state to ensure variant is one of the allowed types
 interface AlertState {
   isEnable: boolean;
@@ -30,62 +25,33 @@ interface AlertState {
   message: string;
 }
 
-const OnboardVendor = () => {
-  const [vendorCode, setVendorCode] = useState<string | undefined>(undefined);
+const OnboardSupervisor = () => {
+  const [supervisorCode, setsupervisorCode] = useState<string | undefined>(undefined);
 
   const [email, setEmail] = useState<string | undefined>(undefined);
   const [phoneNo, setPhoneNo] = useState<string | undefined>(undefined);
   const [name, setName] = useState<string | undefined>(undefined);
-
+  // New state variables for address fields
   const [addressLine, setAddressLine] = useState<string | undefined>(undefined);
   const [city, setCity] = useState<string | undefined>(undefined);
   const [state, setState] = useState<string | undefined>(undefined);
   const [pinCode, setPinCode] = useState<string | undefined>(undefined);
+  // Add route state
   const [route, setRoute] = useState<string | undefined>(undefined);
 
-  const [routesOptions, setRoutesOptions] = useState<RouteType[]>([]);
-  const [loadingRoutes, setLoadingRoutes] = useState<boolean>(false);
-
   const [alert, setAlert] = useState<AlertState>({
-    isEnable: false,
-    variant: "info",
+    isEnable: false, // Initially disabled, only show when an alert occurs
+    variant: "info", // Default variant, will be overridden on alert
     title: "",
     message: "",
   });
 
-  useEffect(() => {
-    const fetchRoutes = async () => {
-      setLoadingRoutes(true);
-      try {
-        const token = localStorage.getItem("sub-admin-token");
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/api/sub-admin/get-all-routes`,
-          {
-            headers: {
-              Authorization: `${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        // The fetched routes are in response.data.routes
-        if (response.status === 200 && Array.isArray(response.data.routes)) {
-          setRoutesOptions(response.data.routes);
-        } else {
-          setRoutesOptions([]);
-        }
-      } catch (error: any) {
-        setRoutesOptions([]);
-      }
-      setLoadingRoutes(false);
-    };
-    fetchRoutes();
-  }, []);
-
   const handlePhoneNumberChange = (phoneNumber: string) => {
+    console.log("Updated phone number:", phoneNumber);
     setPhoneNo(phoneNumber);
   };
 
-  const handleOnboardVendor = async () => {
+  const handleOnboardSupervisor = async () => {
     setAlert({
       isEnable: false,
       variant: "info",
@@ -93,23 +59,25 @@ const OnboardVendor = () => {
       message: "",
     });
 
-    if (!vendorCode) {
+    // Supervisor Code validation
+    if (!supervisorCode) {
       setAlert({
         isEnable: true,
         variant: "error",
-        title: "Missing Vendor Code",
-        message: "Please enter the Vendor Code.",
+        title: "Missing Supervisor Code",
+        message: "Please enter the Supervisor Code.",
       });
       return;
     }
 
-    const vendorCodeRegex = /^\d{6}$/;
-    if (!vendorCodeRegex.test(vendorCode)) {
+    // Basic Supervisor code validation (e.g., 6 digits, adjust as needed)
+    const supervisorCodeRegex = /^\d{6}$/;
+    if (!supervisorCodeRegex.test(supervisorCode)) {
       setAlert({
         isEnable: true,
         variant: "error",
-        title: "Invalid Vendor Code",
-        message: "Please enter a valid 6-digit Vendor Code.",
+        title: "Invalid Supervisor Code",
+        message: "Please enter a valid 6-digit Supervisor Code.",
       });
       return;
     }
@@ -119,7 +87,7 @@ const OnboardVendor = () => {
         isEnable: true,
         variant: "error",
         title: "Missing Name",
-        message: "Please enter the Vendor's name.",
+        message: "Please enter the Supervisor's name.",
       });
       return;
     }
@@ -129,11 +97,12 @@ const OnboardVendor = () => {
         isEnable: true,
         variant: "error",
         title: "Missing Email",
-        message: "Please enter the Vendor's email.",
+        message: "Please enter the Supervisor's email.",
       });
       return;
     }
 
+    // Basic email validation regex
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setAlert({
@@ -150,11 +119,12 @@ const OnboardVendor = () => {
         isEnable: true,
         variant: "error",
         title: "Missing Phone Number",
-        message: "Please enter the Vendor's phone number.",
+        message: "Please enter the Supervisor's phone number.",
       });
       return;
     }
 
+    // Assuming phoneNo includes country code and is 13 chars long, e.g., +911234567890
     if (phoneNo.length !== 13) {
       setAlert({
         isEnable: true,
@@ -166,12 +136,13 @@ const OnboardVendor = () => {
       return;
     }
 
+    // Address field validations
     if (!addressLine) {
       setAlert({
         isEnable: true,
         variant: "error",
         title: "Missing Address Line",
-        message: "Please enter the Vendor's address line.",
+        message: "Please enter the Supervisor's address line.",
       });
       return;
     }
@@ -181,7 +152,7 @@ const OnboardVendor = () => {
         isEnable: true,
         variant: "error",
         title: "Missing City",
-        message: "Please enter the Vendor's city.",
+        message: "Please enter the Supervisor's city.",
       });
       return;
     }
@@ -191,7 +162,7 @@ const OnboardVendor = () => {
         isEnable: true,
         variant: "error",
         title: "Missing State",
-        message: "Please enter the Vendor's state.",
+        message: "Please enter the Supervisor's state.",
       });
       return;
     }
@@ -201,11 +172,12 @@ const OnboardVendor = () => {
         isEnable: true,
         variant: "error",
         title: "Missing Pin Code",
-        message: "Please enter the Vendor's pin code.",
+        message: "Please enter the Supervisor's pin code.",
       });
       return;
     }
 
+    // Basic pin code validation (e.g., 6 digits for India, adjust as needed)
     const pinCodeRegex = /^\d{6}$/;
     if (!pinCodeRegex.test(pinCode)) {
       setAlert({
@@ -217,36 +189,48 @@ const OnboardVendor = () => {
       return;
     }
 
-    // Route field validation (must select a route from the dropdown)
+    // Route validation (optional example: required field)
     if (!route) {
       setAlert({
         isEnable: true,
         variant: "error",
         title: "Missing Route",
-        message: "Please select the Vendor's route.",
+        message: "Please enter the Supervisor's route.",
       });
       return;
     }
+
+    // If all validations pass
+    console.log("Supervisor data is valid:");
+    console.log("Supervisor Code:", supervisorCode);
+    console.log("Name:", name);
+    console.log("Email:", email);
+    console.log("Phone No:", phoneNo);
+    console.log("Address Line:", addressLine);
+    console.log("City:", city);
+    console.log("State:", state);
+    console.log("Pin Code:", pinCode);
+    console.log("Route:", route);
 
     try {
       const token = localStorage.getItem("sub-admin-token");
 
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/sub-admin/onboard-vendor`,
+        `${import.meta.env.VITE_API_URL}/api/sub-admin/onboard-supervisor`,
         {
-          vendorId: vendorCode, // backend expects vendorId
+          supervisorId: supervisorCode, // backend expects SupervisorId, not supervisorCode
           name,
           email,
-          phoneNumber: phoneNo,
+          phoneNumber: phoneNo, // backend expects phoneNumber
           addressLine,
           city,
           state,
-          pincode: pinCode,
-          route,
+          pincode: pinCode, // backend expects pincode, not pinCode
+          route, // new field
         },
         {
           headers: {
-            Authorization: `${token}`,
+            Authorization: `${token}`, // send token for auth
             "Content-Type": "application/json",
           },
         }
@@ -257,11 +241,11 @@ const OnboardVendor = () => {
           isEnable: true,
           variant: "success",
           title: "Success",
-          message: response.data.message || "Vendor onboarded successfully!",
+          message: response.data.message || "Supervisor onboarded successfully!",
         });
 
         // Optionally clear form after success
-        setVendorCode("");
+        setsupervisorCode("");
         setName("");
         setEmail("");
         setPhoneNo("");
@@ -272,10 +256,13 @@ const OnboardVendor = () => {
         setRoute("");
       }
     } catch (error: any) {
+      console.error("Error onboarding Supervisor:", error);
+
       let message =
         error.response?.data?.message ||
         error.message ||
-        "An error occurred while onboarding the vendor.";
+        "An error occurred while onboarding the Supervisor.";
+
       setAlert({
         isEnable: true,
         variant: "error",
@@ -287,9 +274,9 @@ const OnboardVendor = () => {
 
   return (
     <div className="space-y-6">
-      <PageBreadcrumb pageTitle="Onboard Vendor" />
+      <PageBreadcrumb pageTitle="Onboard Supervisor" />
       <div className="space-y-6">
-        <ComponentCard title="Fill Vendor Details">
+        <ComponentCard title="Fill Supervisor Details">
           {alert.isEnable && (
             <Alert
               variant={alert.variant as any}
@@ -298,14 +285,14 @@ const OnboardVendor = () => {
             />
           )}
           <div>
-            <Label>Vendor Code</Label>
+            <Label>Supervisor Code</Label>
             <div className="relative">
               <Input
                 placeholder="e.g., 123456"
                 type="text"
-                name="vendorCode"
-                value={vendorCode}
-                onChange={(e) => setVendorCode(e.target.value)}
+                name="supervisorCode"
+                value={supervisorCode}
+                onChange={(e) => setsupervisorCode(e.target.value)}
               />
             </div>
           </div>
@@ -350,28 +337,17 @@ const OnboardVendor = () => {
               onChange={handlePhoneNumberChange}
             />
           </div>
+          {/* Route Field */}
           <div>
             <Label>Route</Label>
             <div className="relative">
-              <select
+              <Input
+                placeholder="Route Name or Number"
+                type="text"
                 name="route"
-                value={route || ""}
+                value={route}
                 onChange={(e) => setRoute(e.target.value)}
-                className="w-full border border-gray-300 rounded px-3 py-2 text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"
-                disabled={loadingRoutes}
-              >
-                <option value="">Select a Route</option>
-                {routesOptions.map((routeOption) => (
-                  <option key={routeOption._id} value={routeOption.route}>
-                    {routeOption.route}
-                  </option>
-                ))}
-              </select>
-              {loadingRoutes && (
-                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-gray-700 opacity-70">
-                  Loading...
-                </span>
-              )}
+              />
             </div>
           </div>
           {/* New Address Fields */}
@@ -423,11 +399,11 @@ const OnboardVendor = () => {
               />
             </div>
           </div>
-          <Button onClick={handleOnboardVendor}>Handle Onboard Vendor</Button>
+          <Button onClick={handleOnboardSupervisor}>Handle Onboard Supervisor</Button>
         </ComponentCard>
       </div>
     </div>
   );
 };
 
-export default OnboardVendor;
+export default OnboardSupervisor;

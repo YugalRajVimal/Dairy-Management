@@ -59,7 +59,7 @@ export default function UploadSalesSheet() {
           message: "❌ Only Excel files (.xls, .xlsx) are allowed.",
         });
         // Optionally clear the input field value to allow re-selection of the same file
-        event.target.value = "";
+        event.target.value = '';
       }
     } else {
       setFile(null); // If no file is selected (e.g., user cancels selection)
@@ -196,18 +196,6 @@ export default function UploadSalesSheet() {
           <div>
             <Label>Upload excel file</Label>
             <FileInput onChange={handleFileChange} className="custom-class" />
-            <div className="mt-2">
-              <a
-                href="/sample-reports/Sales_Sample_Report.xlsx"
-                download
-                className="text-blue-600 underline hover:text-blue-800 text-sm"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Download Sales Sample Report
-              </a>
-            </div>
-
             <Button
               className="my-8 w-40"
               onClick={handleUploadExcel}

@@ -41,6 +41,16 @@ import SubAdminSalesSheetView from "./pages/SubAdminPages/SalesReport/SalesRepor
 import AdminIssuedAssetsSheetView from "./pages/AdminPages/IssuedAssets/IssuedAssetsView";
 import IssueAssetsToSubAdmin from "./pages/AdminPages/IssuedAssets/IssueAssetsToSubAdmin";
 import AssetsInInventory from "./pages/SubAdminPages/AssetsReport/AssetsInInventory";
+import SupervisorAppLayout from "./layout/Supervisor/AppLayout";
+import SupervisorHome from "./pages/Supervisor/Dashboard/Home";
+import SupervisorSignIn from "./pages/AdminPages/AuthPages/Supervisor/SignIn";
+import OnboardSupervisor from "./pages/SubAdminPages/OnboardSupervisor/OnboardSupervisor";
+import AllSupervisors from "./pages/SubAdminPages/AllSupervisors/AllSupervisors";
+import SupervisorProfiles from "./pages/Supervisor/UserProfiles";
+import SupervisorExcelSheetView from "./pages/Supervisor/MilkReport/ExcelSheetView";
+import SupervisorSalesSheetView from "./pages/Supervisor/SalesReport/SalesReportView";
+import SupervisorAssetsSheetView from "./pages/Supervisor/AssetsReport/AssetsReportView";
+import SupervisorAllVendors from "./pages/Supervisor/AllVendors/AllVendors";
 
 export default function App() {
   return (
@@ -118,6 +128,16 @@ export default function App() {
               element={<OnboardVendor />}
             />
             <Route path="/sub-admin/all-vendors" element={<AllVendors />} />
+
+            <Route
+              index
+              path="/sub-admin/onboard-supervisor"
+              element={<OnboardSupervisor />}
+            />
+            <Route
+              path="/sub-admin/all-supervisors"
+              element={<AllSupervisors />}
+            />
             <Route
               index
               path="/sub-admin/upload-excel-sheet"
@@ -128,7 +148,7 @@ export default function App() {
               path="/sub-admin/upload-sales-report"
               element={<UploadSalesSheet />}
             />
-             <Route
+            <Route
               index
               path="/sub-admin/assets-inventory"
               element={<AssetsInInventory />}
@@ -165,10 +185,44 @@ export default function App() {
             <Route path="/sub-admin/profile" element={<SubAdminProfiles />} />
           </Route>
 
+          <Route element={<SupervisorAppLayout />}>
+            <Route index path="/supervisor" element={<SupervisorHome />} />
+
+            <Route
+              path="/supervisor/all-vendors"
+              element={<SupervisorAllVendors />}
+            />
+            <Route
+              index
+              path="/supervisor/excel-sheet-view"
+              element={<SupervisorExcelSheetView />}
+            />
+
+            <Route
+              index
+              path="/supervisor/sales-report-view"
+              element={<SupervisorSalesSheetView />}
+            />
+
+            <Route
+              index
+              path="/supervisor/asstes-report-view"
+              element={<SupervisorAssetsSheetView />}
+            />
+
+            {/* Others Page */}
+            <Route
+              path="/supervisor/profile"
+              element={<SupervisorProfiles />}
+            />
+          </Route>
+
           {/* Auth Layout */}
           <Route path="/admin/signin" element={<SignIn />} />
           {/* <Route path="/signup" element={<SignUp />} /> */}
           <Route path="/sub-admin/signin" element={<SubAdminSignIn />} />
+          <Route path="/supervisor/signin" element={<SupervisorSignIn />} />
+
           {/* <Route path="/sub-admin/signup" element={<SubAdminSignUpForm />} /> */}
 
           {/* Fallback Route */}

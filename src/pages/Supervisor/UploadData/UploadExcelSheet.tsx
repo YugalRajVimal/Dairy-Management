@@ -120,18 +120,6 @@ export default function UploadExcelSheet() {
           <Label className="mt-4">Upload Excel file</Label>
           <FileInput onChange={handleFileChange} className="custom-class" />
 
-          <div className="mt-2">
-            <a
-              href="/sample-reports/Milk_Sample_Report.xlsx"
-              download
-              className="text-blue-600 underline hover:text-blue-800 text-sm"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Download Milk Sample Report
-            </a>
-          </div>
-
           <Button
             className="my-8 w-40"
             onClick={handleUpload}

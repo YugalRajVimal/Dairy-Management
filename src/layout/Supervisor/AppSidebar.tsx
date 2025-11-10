@@ -3,13 +3,10 @@ import { Link, useLocation } from "react-router";
 
 // Assume these icons are imported from an icon library
 import {
-  ArrowDownIcon,
-  ArrowUpIcon,
   ChevronDownIcon,
   FileIcon,
   GridIcon,
   HorizontaLDots,
-
   UserCircleIcon,
   UserIcon,
 } from "../../icons";
@@ -26,75 +23,34 @@ const navItems: NavItem[] = [
   {
     icon: <GridIcon />,
     name: "Dashboard",
-    path: "/sub-admin",
+    path: "/supervisor",
   },
-  {
-    icon: <ArrowDownIcon />,
-    name: "Onboard Supervisor",
-    path: "/sub-admin/onboard-supervisor",
-  },
-  {
-    icon: <UserIcon />,
-    name: "All Supervisor",
-    path: "/sub-admin/all-supervisors",
-  },
-  {
-    icon: <ArrowDownIcon />,
-    name: "Onboard Vendor",
-    path: "/sub-admin/onboard-vendor",
-  },
+
   {
     icon: <UserIcon />,
     name: "All Vendors",
-    path: "/sub-admin/all-vendors",
+    path: "/supervisor/all-vendors",
   },
-  {
-    icon: <ArrowUpIcon />,
-    name: "Upload Milk Reports",
-    path: "/sub-admin/upload-excel-sheet",
-  },
-  {
-    icon: <ArrowUpIcon />,
-    name: "Upload Sales Reports",
-    path: "/sub-admin/upload-sales-report",
-  },
-  {
-    icon: <HorizontaLDots />,
-    name: "Assets Inventory",
-    path: "/sub-admin/assets-inventory",
-  },
-  
-  {
-    icon: <ArrowUpIcon />,
-    name: "Manage assets",
-    path: "/sub-admin/manage-assets",
-  },
-
-  // {
-  //   icon: <ListIcon />,
-  //   name: "Uploaded Milk Reports",
-  //   path: "/sub-admin/all-excel-sheet/0",
-  // },
   {
     icon: <FileIcon />,
     name: "Uploaded Milk Report",
-    path: "/sub-admin/excel-sheet-view",
+    path: "/supervisor/excel-sheet-view",
   },
   {
     icon: <FileIcon />,
     name: "Uploaded Sales Report",
-    path: "/sub-admin/sales-report-view",
+    path: "/supervisor/sales-report-view",
   },
   {
     icon: <FileIcon />,
     name: "Uploaded Assets Report",
-    path: "/sub-admin/asstes-report-view",
+    path: "/supervisor/asstes-report-view",
   },
 
   {
     icon: <UserCircleIcon />,
-    name: "Sub Admin Profile",
-    path: "/sub-admin/profile",
+    name: "Supervisor Profile",
+    path: "/supervisor/profile",
   },
 
   // {
@@ -159,7 +115,7 @@ const othersItems: NavItem[] = [
   // },
 ];
 
-const SubAdminAppSidebar: React.FC = () => {
+const SupervisorAppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const location = useLocation();
 
@@ -373,7 +329,7 @@ const SubAdminAppSidebar: React.FC = () => {
         <Link to="/">
           {isExpanded || isHovered || isMobileOpen ? (
             <>
-              <span className="text-3xl font-bold">SUB-ADMIN</span>
+              <span className="text-3xl font-bold">SUPERVISOR</span>
             </>
           ) : (
             // <img
@@ -382,7 +338,7 @@ const SubAdminAppSidebar: React.FC = () => {
             //   width={32}
             //   height={32}
             // />
-            <span className="text-xl font-bold">SUB-ADMIN</span>
+            <span className="text-xl font-bold">SUPERVISOR</span>
           )}
         </Link>
       </div>
@@ -429,4 +385,4 @@ const SubAdminAppSidebar: React.FC = () => {
   );
 };
 
-export default SubAdminAppSidebar;
+export default SupervisorAppSidebar;

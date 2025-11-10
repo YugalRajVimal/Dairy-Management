@@ -8,55 +8,53 @@ import {
   TableRow,
 } from "../../../components/ui/table";
 import { UserCircleIcon } from "../../../icons";
-import Button from "../../../components/ui/button/Button";
-import { Link } from "react-router";
 
 // Interface for Vendors
-interface SubAdmins {
+interface Vendor {
   _id: string;
   name: string;
+  vendorId: string;
   email: string;
   phoneNo: string;
-  nickName: string;
   address: {
     addressLine: string;
     city: string;
     state: string;
     pincode: string;
   };
-  zone: string;
+  route: string;
 }
 
-export default function SubAdminList() {
-  const [subadmins, setSubAdmins] = useState<SubAdmins[]>([]);
+export default function SupervisorVendorsList() {
+  const [vendors, setVendors] = useState<Vendor[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchSubAdmins = async () => {
+    const fetchVendors = async () => {
       try {
-        const token = localStorage.getItem("admin-token");
+        const token = localStorage.getItem("supervisor-token");
         const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/api/admin/get-all-sub-admins`,
+          `${import.meta.env.VITE_API_URL}/api/supervisor/get-all-vendors`,
           {
             headers: {
               Authorization: `${token}`,
             },
           }
         );
-        setSubAdmins(res.data.subadmins || []);
+        setVendors(res.data.vendors || []);
       } catch (err: any) {
-        console.error("Error fetching subadmins:", err);
+        console.error("Error fetching vendors:", err);
         setError(
           err.response?.data?.message ||
-            "Failed to fetch subadmins. Please try again."
+            "Failed to fetch vendors. Please try again."
         );
       } finally {
         setLoading(false);
       }
     };
 
-    fetchSubAdmins();
+    fetchVendors();
   }, []);
 
   if (loading) {
@@ -86,21 +84,20 @@ export default function SubAdminList() {
                 isHeader
                 className="px-5 py-3 text-start text-gray-500"
               >
-                Sub Admin Id
+                Name
               </TableCell>
               <TableCell
                 isHeader
                 className="px-5 py-3 text-start text-gray-500"
               >
-                Name & Nick Name
+                Vendor Id
               </TableCell>
               <TableCell
                 isHeader
                 className="px-5 py-3 text-start text-gray-500"
               >
-                Zone
+                Route
               </TableCell>
-
               <TableCell
                 isHeader
                 className="px-5 py-3 text-start text-gray-500"
@@ -131,75 +128,55 @@ export default function SubAdminList() {
               >
                 Pin Code
               </TableCell>
-              <TableCell
-                isHeader
-                className="px-5 py-3 text-start text-gray-500"
-              >
-                Action
-              </TableCell>
             </TableRow>
           </TableHeader>
 
           {/* Table Body */}
           <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-            {subadmins.map((subadmin) => (
-              <TableRow key={subadmin._id}>
-                <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
-                  {subadmin._id}
-                </TableCell>
+            {vendors.map((vendor) => (
+              <TableRow key={vendor._id}>
                 <TableCell className="px-5 py-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 flex justify-center items-center rounded-full">
                       <UserCircleIcon width={28} height={28} />
                     </div>
                     <span className="font-medium text-gray-800 dark:text-white">
-                      {subadmin.name} <br /> {subadmin.nickName}
+                      {vendor.name}
                     </span>
                   </div>
                 </TableCell>
                 <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
-                  {subadmin.zone}
+                  {vendor.vendorId}
+                </TableCell>
+                <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
+                  {vendor.route}
                 </TableCell>
                 <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
                   <a
-                    href={`mailto:${subadmin.email}`}
+                    href={`mailto:${vendor.email}`}
                     className="hover:underline text-blue-800 dark:text-blue-400"
                   >
-                    {subadmin.email}
+                    {vendor.email}
                   </a>
                   <br />
                   <a
-                    href={`tel:${subadmin.phoneNo}`}
+                    href={`tel:${vendor.phoneNo}`}
                     className="hover:underline text-blue-800 dark:text-blue-400"
                   >
-                    {subadmin.phoneNo}
+                    {vendor.phoneNo}
                   </a>
                 </TableCell>
                 <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
-                  {subadmin.address?.addressLine}
+                  {vendor.address?.addressLine}
                 </TableCell>
                 <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
-                  {subadmin.address?.city}
+                  {vendor.address?.city}
                 </TableCell>
                 <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
-                  {subadmin.address?.state}
+                  {vendor.address?.state}
                 </TableCell>
                 <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
-                  {subadmin.address?.pincode}
-                </TableCell>
-                <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
-                  {/* <a
-                    href="/admin/issue-assets-to-sub-admin"
-                    
-                  >
-                    <Button>Issue Assets</Button>
-                  </a> */}
-                  <Link
-                    to="/admin/issue-assets-to-sub-admin"
-                    state={{ subAdminId: subadmin._id }} // <-- pass the ID here
-                  >
-                    <Button>Issue Assets</Button>
-                  </Link>
+                  {vendor.address?.pincode}
                 </TableCell>
               </TableRow>
             ))}

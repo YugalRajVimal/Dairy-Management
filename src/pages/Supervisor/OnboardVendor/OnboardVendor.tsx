@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Label from "../../../components/form/Label";
 import Input from "../../../components/form/input/InputField";
 import { EnvelopeIcon, UserCircleIcon } from "../../../icons";
@@ -17,11 +17,6 @@ const countries = [
   { code: "AU", label: "+61" },
 ];
 
-interface RouteType {
-  _id: string;
-  route: string;
-}
-
 // Define the type for the error state to ensure variant is one of the allowed types
 interface AlertState {
   isEnable: boolean;
@@ -36,56 +31,26 @@ const OnboardVendor = () => {
   const [email, setEmail] = useState<string | undefined>(undefined);
   const [phoneNo, setPhoneNo] = useState<string | undefined>(undefined);
   const [name, setName] = useState<string | undefined>(undefined);
-
+  // New state variables for address fields
   const [addressLine, setAddressLine] = useState<string | undefined>(undefined);
   const [city, setCity] = useState<string | undefined>(undefined);
   const [state, setState] = useState<string | undefined>(undefined);
   const [pinCode, setPinCode] = useState<string | undefined>(undefined);
-  const [route, setRoute] = useState<string | undefined>(undefined);
-
-  const [routesOptions, setRoutesOptions] = useState<RouteType[]>([]);
-  const [loadingRoutes, setLoadingRoutes] = useState<boolean>(false);
 
   const [alert, setAlert] = useState<AlertState>({
-    isEnable: false,
-    variant: "info",
+    isEnable: false, // Initially disabled, only show when an alert occurs
+    variant: "info", // Default variant, will be overridden on alert
     title: "",
     message: "",
   });
 
-  useEffect(() => {
-    const fetchRoutes = async () => {
-      setLoadingRoutes(true);
-      try {
-        const token = localStorage.getItem("sub-admin-token");
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/api/sub-admin/get-all-routes`,
-          {
-            headers: {
-              Authorization: `${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        // The fetched routes are in response.data.routes
-        if (response.status === 200 && Array.isArray(response.data.routes)) {
-          setRoutesOptions(response.data.routes);
-        } else {
-          setRoutesOptions([]);
-        }
-      } catch (error: any) {
-        setRoutesOptions([]);
-      }
-      setLoadingRoutes(false);
-    };
-    fetchRoutes();
-  }, []);
-
   const handlePhoneNumberChange = (phoneNumber: string) => {
+    console.log("Updated phone number:", phoneNumber);
     setPhoneNo(phoneNumber);
   };
 
   const handleOnboardVendor = async () => {
+    // Clear any previous alert messages at the start of a new submission attempt
     setAlert({
       isEnable: false,
       variant: "info",
@@ -93,6 +58,7 @@ const OnboardVendor = () => {
       message: "",
     });
 
+    // Vendor Code validation
     if (!vendorCode) {
       setAlert({
         isEnable: true,
@@ -103,6 +69,7 @@ const OnboardVendor = () => {
       return;
     }
 
+    // Basic vendor code validation (e.g., 6 digits, adjust as needed)
     const vendorCodeRegex = /^\d{6}$/;
     if (!vendorCodeRegex.test(vendorCode)) {
       setAlert({
@@ -134,6 +101,7 @@ const OnboardVendor = () => {
       return;
     }
 
+    // Basic email validation regex
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setAlert({
@@ -155,6 +123,9 @@ const OnboardVendor = () => {
       return;
     }
 
+    // Assuming phoneNo includes country code and is 13 chars long, e.g., +911234567890
+    // This validation might need adjustment based on the PhoneInput component's output format
+    // For now, keeping the existing logic.
     if (phoneNo.length !== 13) {
       setAlert({
         isEnable: true,
@@ -166,6 +137,7 @@ const OnboardVendor = () => {
       return;
     }
 
+    // Address field validations
     if (!addressLine) {
       setAlert({
         isEnable: true,
@@ -206,6 +178,7 @@ const OnboardVendor = () => {
       return;
     }
 
+    // Basic pin code validation (e.g., 6 digits for India, adjust as needed)
     const pinCodeRegex = /^\d{6}$/;
     if (!pinCodeRegex.test(pinCode)) {
       setAlert({
@@ -217,16 +190,16 @@ const OnboardVendor = () => {
       return;
     }
 
-    // Route field validation (must select a route from the dropdown)
-    if (!route) {
-      setAlert({
-        isEnable: true,
-        variant: "error",
-        title: "Missing Route",
-        message: "Please select the Vendor's route.",
-      });
-      return;
-    }
+    // If all validations pass
+    console.log("Vendor data is valid:");
+    console.log("Vendor Code:", vendorCode);
+    console.log("Name:", name);
+    console.log("Email:", email);
+    console.log("Phone No:", phoneNo);
+    console.log("Address Line:", addressLine);
+    console.log("City:", city);
+    console.log("State:", state);
+    console.log("Pin Code:", pinCode);
 
     try {
       const token = localStorage.getItem("sub-admin-token");
@@ -234,19 +207,18 @@ const OnboardVendor = () => {
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL}/api/sub-admin/onboard-vendor`,
         {
-          vendorId: vendorCode, // backend expects vendorId
+          vendorId: vendorCode, // backend expects vendorId, not vendorCode
           name,
           email,
-          phoneNumber: phoneNo,
+          phoneNumber: phoneNo, // backend expects phoneNumber
           addressLine,
           city,
           state,
-          pincode: pinCode,
-          route,
+          pincode: pinCode, // backend expects pincode, not pinCode
         },
         {
           headers: {
-            Authorization: `${token}`,
+            Authorization: `${token}`, // send token for auth
             "Content-Type": "application/json",
           },
         }
@@ -269,13 +241,15 @@ const OnboardVendor = () => {
         setCity("");
         setState("");
         setPinCode("");
-        setRoute("");
       }
     } catch (error: any) {
+      console.error("Error onboarding vendor:", error);
+
       let message =
         error.response?.data?.message ||
         error.message ||
         "An error occurred while onboarding the vendor.";
+
       setAlert({
         isEnable: true,
         variant: "error",
@@ -349,31 +323,7 @@ const OnboardVendor = () => {
               placeholder="+1 (555) 000-0000"
               onChange={handlePhoneNumberChange}
             />
-          </div>
-          <div>
-            <Label>Route</Label>
-            <div className="relative">
-              <select
-                name="route"
-                value={route || ""}
-                onChange={(e) => setRoute(e.target.value)}
-                className="w-full border border-gray-300 rounded px-3 py-2 text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"
-                disabled={loadingRoutes}
-              >
-                <option value="">Select a Route</option>
-                {routesOptions.map((routeOption) => (
-                  <option key={routeOption._id} value={routeOption.route}>
-                    {routeOption.route}
-                  </option>
-                ))}
-              </select>
-              {loadingRoutes && (
-                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-gray-700 opacity-70">
-                  Loading...
-                </span>
-              )}
-            </div>
-          </div>
+          </div>{" "}
           {/* New Address Fields */}
           <div>
             <Label>Address Line</Label>

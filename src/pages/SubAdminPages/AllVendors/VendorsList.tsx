@@ -22,6 +22,7 @@ interface Vendor {
     state: string;
     pincode: string;
   };
+  route: string;
 }
 
 export default function VendorsList() {
@@ -95,6 +96,12 @@ export default function VendorsList() {
                 isHeader
                 className="px-5 py-3 text-start text-gray-500"
               >
+                Route
+              </TableCell>
+              <TableCell
+                isHeader
+                className="px-5 py-3 text-start text-gray-500"
+              >
                 Email & Phone No.
               </TableCell>
               <TableCell
@@ -140,6 +147,9 @@ export default function VendorsList() {
                 </TableCell>
                 <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
                   {vendor.vendorId}
+                </TableCell>
+                <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
+                  {vendor.route}
                 </TableCell>
                 <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
                   <a
