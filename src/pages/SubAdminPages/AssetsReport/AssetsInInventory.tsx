@@ -66,8 +66,8 @@ export default function AssetsInInventory() {
         );
 
         if (res.data?.data) {
-          setFormData(res.data.data);
-          setUsedAssets(res.data.usedAssets);
+          setFormData(res?.data?.data);
+          if (res?.data?.usedAssets) setUsedAssets(res?.data?.usedAssets);
         }
       } catch (error) {
         console.error("Error fetching asset report:", error);
@@ -142,7 +142,7 @@ export default function AssetsInInventory() {
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {group.fields.map((field) => {
+              {group?.fields?.map((field) => {
                 const valueForm = formData[field as keyof AssetReport];
                 const valueUsed = usedAssets[field as keyof AssetReport];
 
@@ -159,7 +159,7 @@ export default function AssetsInInventory() {
                       className="p-4 rounded-xl border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 hover:shadow-md transition"
                     >
                       <Label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
-                        {field.toUpperCase()}
+                        {field?.toUpperCase()}
                       </Label>
 
                       <div className="flex justify-between text-sm font-medium mb-1">
@@ -203,7 +203,7 @@ export default function AssetsInInventory() {
                       className="p-4 rounded-xl border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 hover:shadow-md transition"
                     >
                       <Label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
-                        {field.toUpperCase()}
+                        {field?.toUpperCase()}
                       </Label>
 
                       {/* Used Items */}
@@ -213,7 +213,7 @@ export default function AssetsInInventory() {
                         </p>
                         <div className="flex flex-wrap gap-2">
                           {usedItems && usedItems.length > 0 ? (
-                            usedItems.map((item, idx) => (
+                            usedItems?.map((item, idx) => (
                               <span
                                 key={idx}
                                 className="text-xs px-2 py-1 rounded-full bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"
