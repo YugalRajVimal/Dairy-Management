@@ -453,6 +453,7 @@ export default function IssueAssetsToSubAdmin() {
             type="text"
             value={subAdminId}
             disabled
+
             className="bg-gray-100 dark:bg-gray-700 cursor-not-allowed"
           />
         </div>

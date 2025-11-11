@@ -60,6 +60,7 @@ const Input: FC<InputProps> = ({
         step={step}
         disabled={disabled}
         className={inputClasses}
+        onWheel={(e) => (e.target as HTMLInputElement).blur()}
       />
 
       {hint && (
