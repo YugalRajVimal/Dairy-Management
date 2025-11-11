@@ -38,6 +38,7 @@ export default function UploadedAdminAssetsDataTable() {
   const [totalPages, setTotalPages] = useState(1);
 
   const [selectedHistory, setSelectedHistory] = useState<any[] | null>(null); // modal state
+  const [filter, setFilter] = useState(""); // new filter state
 
   const hiddenColumns = ["_id", "__v", "createdAt", "updatedAt", "uploadedBy"];
 
@@ -85,7 +86,33 @@ export default function UploadedAdminAssetsDataTable() {
 
   useEffect(() => {
     fetchReports(page);
+    // filter should not clear data on page change
+    // eslint-disable-next-line
   }, [page]);
+
+  // Filter reports according to row content
+  const filteredReports = !filter
+    ? reports
+    : reports.filter((row) =>
+        columns.some((col) => {
+          const val = row[col];
+          let str = "";
+
+          if (col === "uploadedOn") {
+            str = formatDate(val, true);
+          } else if (col === "docDate") {
+            str = formatDate(val);
+          } else if (Array.isArray(val) && col === "history") {
+            str = `history: ${val.length}`;
+          } else if (typeof val === "object" && val !== null) {
+            str = Object.values(val).join(", ");
+          } else {
+            str = String(val ?? "");
+          }
+
+          return str.toLowerCase().includes(filter.trim().toLowerCase());
+        })
+      );
 
   if (loading) return <p className="p-4 text-gray-500">Loading reports...</p>;
   if (!reports || reports.length === 0)
@@ -94,8 +121,18 @@ export default function UploadedAdminAssetsDataTable() {
   return (
     <>
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
+        <div className="p-4 flex flex-col sm:flex-row gap-2 sm:items-center">
+          <input
+            type="text"
+            placeholder="Filter..."
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            className="border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 focus:outline-none focus:ring focus:border-blue-400 dark:bg-gray-800 dark:text-white w-full sm:w-72"
+            spellCheck={false}
+            aria-label="Filter assets"
+          />
+        </div>
         <div className="max-w-full overflow-x-auto">
-          
           <Table>
             {/* Table Header */}
             <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
@@ -114,30 +151,38 @@ export default function UploadedAdminAssetsDataTable() {
 
             {/* Table Body */}
             <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-              {reports.map((row, rowIndex) => (
-                <TableRow key={rowIndex}>
-                  {columns.map((col) => (
-                    <TableCell
-                      key={col}
-                      className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400"
-                    >
-                      {col === "uploadedOn" ? (
-                        formatDate(row[col], true)
-                      ) : col === "docDate" ? (
-                        formatDate(row[col])
-                      ) : Array.isArray(row[col]) && col === "history" ? (
-                        <Button onClick={() => setSelectedHistory(row[col])}>
-                          View History ({row[col].length})
-                        </Button>
-                      ) : typeof row[col] === "object" ? (
-                        Object.values(row[col]).join(", ")
-                      ) : (
-                        row[col] ?? ""
-                      )}
-                    </TableCell>
-                  ))}
+              {filteredReports.length === 0 ? (
+                <TableRow>
+                  <TableCell  className="px-4 py-3 text-gray-500 text-theme-sm dark:text-gray-400">
+                    No matching records found.
+                  </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                filteredReports.map((row, rowIndex) => (
+                  <TableRow key={rowIndex}>
+                    {columns.map((col) => (
+                      <TableCell
+                        key={col}
+                        className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400"
+                      >
+                        {col === "uploadedOn" ? (
+                          formatDate(row[col], true)
+                        ) : col === "docDate" ? (
+                          formatDate(row[col])
+                        ) : Array.isArray(row[col]) && col === "history" ? (
+                          <Button onClick={() => setSelectedHistory(row[col])}>
+                            View History ({row[col].length})
+                          </Button>
+                        ) : typeof row[col] === "object" ? (
+                          Object.values(row[col]).join(", ")
+                        ) : (
+                          row[col] ?? ""
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </div>
