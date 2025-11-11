@@ -32,6 +32,9 @@ export default function SubAdminList() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Filtering state
+  const [filter, setFilter] = useState<string>("");
+
   useEffect(() => {
     const fetchSubAdmins = async () => {
       try {
@@ -59,6 +62,20 @@ export default function SubAdminList() {
     fetchSubAdmins();
   }, []);
 
+  // Filtering logic
+  const filteredSubAdmins = filter.trim()
+    ? subadmins.filter((subadmin) => {
+        const filterText = filter.toLowerCase();
+        return (
+          subadmin.name?.toLowerCase().includes(filterText) ||
+          subadmin.email?.toLowerCase().includes(filterText) ||
+          subadmin.phoneNo?.toLowerCase().includes(filterText) ||
+          subadmin.nickName?.toLowerCase().includes(filterText) ||
+          subadmin._id?.toLowerCase().includes(filterText)
+        );
+      })
+    : subadmins;
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[200px]">
@@ -78,6 +95,16 @@ export default function SubAdminList() {
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
       <div className="max-w-full overflow-x-auto">
+        {/* Filter Input */}
+        <div className="p-4">
+          <input
+            type="text"
+            className="w-full max-w-md px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700"
+            placeholder="Search by Name, Email, Phone No, Nick Name, or ID..."
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+          />
+        </div>
         <Table>
           {/* Table Header */}
           <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
@@ -142,67 +169,69 @@ export default function SubAdminList() {
 
           {/* Table Body */}
           <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-            {subadmins.map((subadmin) => (
-              <TableRow key={subadmin._id}>
-                <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
-                  {subadmin._id}
-                </TableCell>
-                <TableCell className="px-5 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 flex justify-center items-center rounded-full">
-                      <UserCircleIcon width={28} height={28} />
-                    </div>
-                    <span className="font-medium text-gray-800 dark:text-white">
-                      {subadmin.name} <br /> {subadmin.nickName}
-                    </span>
-                  </div>
-                </TableCell>
-                <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
-                  {subadmin.zone}
-                </TableCell>
-                <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
-                  <a
-                    href={`mailto:${subadmin.email}`}
-                    className="hover:underline text-blue-800 dark:text-blue-400"
-                  >
-                    {subadmin.email}
-                  </a>
-                  <br />
-                  <a
-                    href={`tel:${subadmin.phoneNo}`}
-                    className="hover:underline text-blue-800 dark:text-blue-400"
-                  >
-                    {subadmin.phoneNo}
-                  </a>
-                </TableCell>
-                <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
-                  {subadmin.address?.addressLine}
-                </TableCell>
-                <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
-                  {subadmin.address?.city}
-                </TableCell>
-                <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
-                  {subadmin.address?.state}
-                </TableCell>
-                <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
-                  {subadmin.address?.pincode}
-                </TableCell>
-                <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
-                  {/* <a
-                    href="/admin/issue-assets-to-sub-admin"
-                    
-                  >
-                    <Button>Issue Assets</Button>
-                  </a> */}
-                  <Link
-                    to="/admin/issue-assets-to-sub-admin"
-                    state={{ subAdminId: subadmin._id }} // <-- pass the ID here
-                  >
-                    <Button>Issue Assets</Button>
-                  </Link>
+            {filteredSubAdmins.length === 0 ? (
+              <TableRow>
+                <TableCell className="px-4 py-4 text-gray-500 text-center">
+                  No sub-admins found.
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              filteredSubAdmins.map((subadmin) => (
+                <TableRow key={subadmin._id}>
+                  <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
+                    {subadmin._id}
+                  </TableCell>
+                  <TableCell className="px-5 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 flex justify-center items-center rounded-full">
+                        <UserCircleIcon width={28} height={28} />
+                      </div>
+                      <span className="font-medium text-gray-800 dark:text-white">
+                        {subadmin.name} <br /> {subadmin.nickName}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
+                    {subadmin.zone}
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
+                    <a
+                      href={`mailto:${subadmin.email}`}
+                      className="hover:underline text-blue-800 dark:text-blue-400"
+                    >
+                      {subadmin.email}
+                    </a>
+                    <br />
+                    <a
+                      href={`tel:${subadmin.phoneNo}`}
+                      className="hover:underline text-blue-800 dark:text-blue-400"
+                    >
+                      {subadmin.phoneNo}
+                    </a>
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
+                    {subadmin.address?.addressLine}
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
+                    {subadmin.address?.city}
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
+                    {subadmin.address?.state}
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
+                    {subadmin.address?.pincode}
+                  </TableCell>
+                  <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
+                    <Link
+                      to="/admin/issue-assets-to-sub-admin"
+                      state={{ subAdminId: subadmin._id }}
+                    >
+                      <Button>Issue Assets</Button>
+                    </Link>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </div>

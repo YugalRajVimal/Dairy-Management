@@ -51,6 +51,8 @@ import SupervisorExcelSheetView from "./pages/Supervisor/MilkReport/ExcelSheetVi
 import SupervisorSalesSheetView from "./pages/Supervisor/SalesReport/SalesReportView";
 import SupervisorAssetsSheetView from "./pages/Supervisor/AssetsReport/AssetsReportView";
 import SupervisorAllVendors from "./pages/Supervisor/AllVendors/AllVendors";
+import TreeFormation from "./pages/SubAdminPages/TreeFormation/TreeFormation";
+import AdminTreeFormation from "./pages/AdminPages/TreeFormation/TreeFormation";
 
 export default function App() {
   return (
@@ -71,6 +73,12 @@ export default function App() {
               index
               path="/admin/all-sub-admins"
               element={<AllSubAdmins />}
+            />
+
+            <Route
+              index
+              path="/admin/tree-formation"
+              element={<AdminTreeFormation />}
             />
 
             <Route
@@ -140,6 +148,11 @@ export default function App() {
             />
             <Route
               index
+              path="/sub-admin/tree-formation"
+              element={<TreeFormation />}
+            />
+            <Route
+              index
               path="/sub-admin/upload-excel-sheet"
               element={<UploadExcelSheet />}
             />
@@ -192,6 +205,7 @@ export default function App() {
               path="/supervisor/all-vendors"
               element={<SupervisorAllVendors />}
             />
+
             <Route
               index
               path="/supervisor/excel-sheet-view"

@@ -16,12 +16,17 @@ export default function AuthLayout({
             {/* <!-- ===== Common Grid Shape Start ===== --> */}
             <GridShape />
             <div className="flex flex-col items-center max-w-xs">
-              <p className="block mb-4 text-white text-4xl">
-                Dairy Management
-              </p>
+              <p className="block mb-4 text-white text-4xl">Dairy Management</p>
               <p className="text-center text-gray-400 dark:text-white/60">
                 Admin Dashboard
               </p>
+              <a
+                href="/"
+                className="mt-6 inline-flex items-center gap-2 px-5 py-2 bg-white/20 rounded-lg text-white hover:bg-white/30 transition font-semibold"
+                style={{ textDecoration: "none" }}
+              >
+                Home
+              </a>
             </div>
           </div>
         </div>

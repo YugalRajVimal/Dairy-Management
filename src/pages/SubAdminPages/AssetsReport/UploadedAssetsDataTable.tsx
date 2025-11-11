@@ -36,6 +36,7 @@ export default function UploadedAssetsDataTable() {
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
+  const [filter, setFilter] = useState<string>(""); // Filter for whole row
 
   const [selectedHistory, setSelectedHistory] = useState<any[] | null>(null); // modal state
 
@@ -85,12 +86,58 @@ export default function UploadedAssetsDataTable() {
     fetchReports(page);
   }, [page]);
 
+  // FILTER REPORTS BASED ON WHOLE ROW MATCH
+  const filteredReports = filter
+    ? reports.filter((row) =>
+        columns.some((col) => {
+          const val = row[col];
+          if (val == null) return false;
+          if (col === "uploadedOn" || col === "docDate") {
+            // Also filter formatted dates
+            const formatted = formatDate(val, col === "uploadedOn");
+            return formatted
+              .toLowerCase()
+              .includes(filter.trim().toLowerCase());
+          }
+          if (Array.isArray(val)) {
+            return val
+              .join(", ")
+              .toLowerCase()
+              .includes(filter.trim().toLowerCase());
+          }
+          if (typeof val === "object") {
+            return Object.values(val)
+              .join(", ")
+              .toLowerCase()
+              .includes(filter.trim().toLowerCase());
+          }
+          return String(val).toLowerCase().includes(filter.trim().toLowerCase());
+        })
+      )
+    : reports;
+
   if (loading) return <p className="p-4 text-gray-500">Loading reports...</p>;
   if (!reports || reports.length === 0)
     return <p className="p-4 text-gray-500">No data available</p>;
 
   return (
     <>
+      <div className="mb-2 flex justify-between items-center">
+        <div className="relative">
+          <input
+            type="text"
+            className="block w-[250px] px-3 py-2 text-sm rounded border border-gray-200 focus:outline-none focus:ring focus:border-blue-300 dark:bg-gray-900 dark:text-white"
+            placeholder="Search..."
+            value={filter}
+            onChange={e => {
+              setFilter(e.target.value);
+              // Optionally reset to first page when filter changes
+              // setPage(1); 
+            }}
+            aria-label="Search across all fields"
+          />
+        </div>
+      </div>
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
         <div className="max-w-full overflow-x-auto">
           <Table>
@@ -111,30 +158,40 @@ export default function UploadedAssetsDataTable() {
 
             {/* Table Body */}
             <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-              {reports.map((row, rowIndex) => (
-                <TableRow key={rowIndex}>
-                  {columns.map((col) => (
-                    <TableCell
-                      key={col}
-                      className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400"
-                    >
-                      {col === "uploadedOn" ? (
-                        formatDate(row[col], true)
-                      ) : col === "docDate" ? (
-                        formatDate(row[col])
-                      ) : Array.isArray(row[col]) && col === "history" ? (
-                        <Button onClick={() => setSelectedHistory(row[col])}>
-                          View History ({row[col].length})
-                        </Button>
-                      ) : typeof row[col] === "object" ? (
-                        Object.values(row[col]).join(", ")
-                      ) : (
-                        row[col] ?? ""
-                      )}
-                    </TableCell>
-                  ))}
+              {filteredReports.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    className="px-4 py-3 text-gray-500 text-center text-theme-sm dark:text-gray-400"
+                  >
+                    No matching data
+                  </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                filteredReports.map((row, rowIndex) => (
+                  <TableRow key={rowIndex}>
+                    {columns.map((col) => (
+                      <TableCell
+                        key={col}
+                        className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400"
+                      >
+                        {col === "uploadedOn" ? (
+                          formatDate(row[col], true)
+                        ) : col === "docDate" ? (
+                          formatDate(row[col])
+                        ) : Array.isArray(row[col]) && col === "history" ? (
+                          <Button onClick={() => setSelectedHistory(row[col])}>
+                            View History ({row[col].length})
+                          </Button>
+                        ) : typeof row[col] === "object" ? (
+                          Object.values(row[col]).join(", ")
+                        ) : (
+                          row[col] ?? ""
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </div>

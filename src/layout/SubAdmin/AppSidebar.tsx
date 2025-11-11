@@ -49,6 +49,11 @@ const navItems: NavItem[] = [
     path: "/sub-admin/all-vendors",
   },
   {
+    icon: <ChevronDownIcon />,
+    name: "Tree Formation",
+    path: "/sub-admin/tree-formation",
+  },
+  {
     icon: <ArrowUpIcon />,
     name: "Upload Milk Reports",
     path: "/sub-admin/upload-excel-sheet",

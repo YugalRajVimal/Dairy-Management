@@ -38,6 +38,11 @@ const navItems: NavItem[] = [
     path: "/admin/all-sub-admins",
   },
   {
+    icon: <ChevronDownIcon />,
+    name: "Tree Formation",
+    path: "/admin/tree-formation",
+  },
+  {
     icon: <HorizontaLDots />,
     name: "Issued Assets",
     path: "/admin/issued-assets-report",

@@ -21,6 +21,7 @@ export default function SupervisorExcelDataTable() {
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
+  const [filter, setFilter] = useState<string>(""); // <-- Add filter state
 
   const hiddenColumns = ["_id", "__v", "createdAt", "updatedAt", "uploadedBy"];
 
@@ -68,17 +69,46 @@ export default function SupervisorExcelDataTable() {
     fetchReports(page);
   }, [page]);
 
+  // Filtering logic: filter by the whole row (all column values as a string, case-insensitive)
+  const filterText = filter.trim().toLowerCase();
+
+  const filteredReports = filterText
+    ? reports.filter((row) => {
+        const rowStr = columns
+          .map((col) => {
+            if (col === "uploadedOn")
+              return formatDate(row[col], true);
+            if (col === "docDate")
+              return formatDate(row[col]);
+            return row[col] !== undefined && row[col] !== null ? String(row[col]) : "";
+          })
+          .join(" ")
+          .toLowerCase();
+        return rowStr.includes(filterText);
+      })
+    : reports;
+
   if (loading) {
     return <p className="p-4 text-gray-500">Loading reports...</p>;
   }
 
-  if (!reports || reports.length === 0) {
+  if (!filteredReports || filteredReports.length === 0) {
     return <p className="p-4 text-gray-500">No data available</p>;
   }
 
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
       <div className="max-w-full overflow-x-auto">
+        {/* Filter input */}
+        <div className="p-4">
+          <input
+            type="text"
+            className="w-full max-w-md px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700"
+            placeholder="Search in all columns..."
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+          />
+        </div>
         <Table>
           {/* Table Header */}
           <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
@@ -97,7 +127,7 @@ export default function SupervisorExcelDataTable() {
 
           {/* Table Body */}
           <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-            {reports.map((row, rowIndex) => (
+            {filteredReports.map((row, rowIndex) => (
               <TableRow key={rowIndex}>
                 {columns.map((col) => (
                   <TableCell

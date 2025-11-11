@@ -20,6 +20,13 @@ export default function AuthLayout({
               <p className="text-center text-gray-400 dark:text-white/60">
                 Sub Admin Dashboard
               </p>
+              <a
+                href="/"
+                className="mt-6 inline-flex items-center gap-2 px-5 py-2 bg-white/20 rounded-lg text-white hover:bg-white/30 transition font-semibold"
+                style={{ textDecoration: "none" }}
+              >
+                Home
+              </a>
             </div>
           </div>
         </div>

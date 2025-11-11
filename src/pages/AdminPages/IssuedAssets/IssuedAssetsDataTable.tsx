@@ -95,6 +95,7 @@ export default function UploadedAdminAssetsDataTable() {
     <>
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
         <div className="max-w-full overflow-x-auto">
+          
           <Table>
             {/* Table Header */}
             <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
@@ -159,6 +160,7 @@ export default function UploadedAdminAssetsDataTable() {
             Next
           </Button>
         </div>
+        
       </div>
 
       {/* History Modal */}
@@ -169,6 +171,7 @@ export default function UploadedAdminAssetsDataTable() {
         <h2 className="text-lg font-semibold mb-4">Asset History</h2>
         {selectedHistory && selectedHistory.length > 0 ? (
           <div className="max-w-full overflow-x-auto">
+            
             <Table>
               {/* Table Header */}
               <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">

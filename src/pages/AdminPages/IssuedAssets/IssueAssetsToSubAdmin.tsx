@@ -444,6 +444,8 @@ export default function IssueAssetsToSubAdmin() {
           message={alert.message}
         />
       )}
+
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
         <div className="md:col-span-2">
           <Label>SubAdmin ID</Label>
@@ -499,6 +501,7 @@ export default function IssueAssetsToSubAdmin() {
               key={field}
               className="p-4 rounded-xl border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 hover:shadow-md transition"
             >
+              
               <Label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">
                 {field.toUpperCase()} (Used: {used} / Total: {total})
               </Label>

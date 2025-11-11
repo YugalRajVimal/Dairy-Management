@@ -29,6 +29,8 @@ export default function SupervisorVendorsList() {
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  // Add filter state
+  const [filter, setFilter] = useState<string>("");
 
   useEffect(() => {
     const fetchVendors = async () => {
@@ -57,6 +59,18 @@ export default function SupervisorVendorsList() {
     fetchVendors();
   }, []);
 
+  // Filtering logic: filter by name, email, phoneNo, vendorId, or route
+  const filterText = filter.trim().toLowerCase();
+  const filteredVendors = filterText
+    ? vendors.filter((vendor) =>
+        (vendor.name && vendor.name.toLowerCase().includes(filterText)) ||
+        (vendor.email && vendor.email.toLowerCase().includes(filterText)) ||
+        (vendor.phoneNo && vendor.phoneNo.toLowerCase().includes(filterText)) ||
+        (vendor.vendorId && vendor.vendorId.toLowerCase().includes(filterText)) ||
+        (vendor.route && vendor.route.toLowerCase().includes(filterText))
+      )
+    : vendors;
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[200px]">
@@ -76,6 +90,16 @@ export default function SupervisorVendorsList() {
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
       <div className="max-w-full overflow-x-auto">
+        {/* Filter Input */}
+        <div className="p-4">
+          <input
+            type="text"
+            className="w-full max-w-md px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700"
+            placeholder="Search by Name, Email, Phone No, Vendor ID, or Route..."
+            value={filter}
+            onChange={e => setFilter(e.target.value)}
+          />
+        </div>
         <Table>
           {/* Table Header */}
           <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
@@ -133,7 +157,7 @@ export default function SupervisorVendorsList() {
 
           {/* Table Body */}
           <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-            {vendors.map((vendor) => (
+            {filteredVendors.map((vendor) => (
               <TableRow key={vendor._id}>
                 <TableCell className="px-5 py-4">
                   <div className="flex items-center gap-3">
