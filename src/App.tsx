@@ -53,6 +53,7 @@ import SupervisorAssetsSheetView from "./pages/Supervisor/AssetsReport/AssetsRep
 import SupervisorAllVendors from "./pages/Supervisor/AllVendors/AllVendors";
 import TreeFormation from "./pages/SubAdminPages/TreeFormation/TreeFormation";
 import AdminTreeFormation from "./pages/AdminPages/TreeFormation/TreeFormation";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 
 export default function App() {
   return (
@@ -236,6 +237,7 @@ export default function App() {
           {/* <Route path="/signup" element={<SignUp />} /> */}
           <Route path="/sub-admin/signin" element={<SubAdminSignIn />} />
           <Route path="/supervisor/signin" element={<SupervisorSignIn />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
 
           {/* <Route path="/sub-admin/signup" element={<SubAdminSignUpForm />} /> */}
 
