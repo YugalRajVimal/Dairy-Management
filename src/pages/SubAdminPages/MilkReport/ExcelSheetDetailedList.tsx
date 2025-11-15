@@ -223,7 +223,7 @@ export default function SubAdminExcelDataTable() {
         snfPercentage: editData.snfPercentage,
       };
 
-      const res = await axios.put(
+       await axios.put(
         `${API_URL}/api/sub-admin/update-milk-report/${id}`,
         body,
         {
