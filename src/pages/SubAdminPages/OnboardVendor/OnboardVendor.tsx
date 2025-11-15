@@ -19,7 +19,7 @@ const countries = [
 
 interface RouteType {
   _id: string;
-  route: string;
+  route: number; // route is integer now
 }
 
 // Define the type for the error state to ensure variant is one of the allowed types
@@ -41,6 +41,7 @@ const OnboardVendor = () => {
   const [city, setCity] = useState<string | undefined>(undefined);
   const [state, setState] = useState<string | undefined>(undefined);
   const [pinCode, setPinCode] = useState<string | undefined>(undefined);
+  // Store route as string temporarily for the select value, but guarantee integer usage
   const [route, setRoute] = useState<string | undefined>(undefined);
 
   const [routesOptions, setRoutesOptions] = useState<RouteType[]>([]);
@@ -218,7 +219,7 @@ const OnboardVendor = () => {
     }
 
     // Route field validation (must select a route from the dropdown)
-    if (!route) {
+    if (!route || isNaN(parseInt(route))) {
       setAlert({
         isEnable: true,
         variant: "error",
@@ -242,7 +243,8 @@ const OnboardVendor = () => {
           city,
           state,
           pincode: pinCode,
-          route,
+          // Pass route as integer
+          route: parseInt(route),
         },
         {
           headers: {
