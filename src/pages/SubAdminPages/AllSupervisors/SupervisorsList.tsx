@@ -9,8 +9,8 @@ import {
 } from "../../../components/ui/table";
 import { UserCircleIcon } from "../../../icons";
 
-// Interface for Vendors
-interface Vendor {
+// Interface for Supervisors (renamed from Vendor for clarity)
+interface Supervisor {
   _id: string;
   name: string;
   supervisorId: string;
@@ -22,11 +22,11 @@ interface Vendor {
     state: string;
     pincode: string;
   };
-  route: string;
+  supervisorRoutes: number[]; // route is now an array of numbers
 }
 
 export default function SupervisorsList() {
-  const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [supervisors, setSupervisors] = useState<Supervisor[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,7 +34,7 @@ export default function SupervisorsList() {
   const [filter, setFilter] = useState<string>("");
 
   useEffect(() => {
-    const fetchVendors = async () => {
+    const fetchSupervisors = async () => {
       try {
         const token = localStorage.getItem("sub-admin-token");
         const res = await axios.get(
@@ -45,7 +45,7 @@ export default function SupervisorsList() {
             },
           }
         );
-        setVendors(res.data.vendors || []);
+        setSupervisors(res.data.vendors || []); // API still returns "vendors" that are actually supervisors
       } catch (err: any) {
         console.error("Error fetching supervisors:", err);
         setError(
@@ -57,22 +57,25 @@ export default function SupervisorsList() {
       }
     };
 
-    fetchVendors();
+    fetchSupervisors();
   }, []);
 
-  // Filtering logic: filter by name, email, phoneNo, supervisorId, or route
+  // Filtering logic: filter by name, email, phoneNo, supervisorId, or route (supervisorRoutes)
   const filterText = filter.trim().toLowerCase();
-  const filteredVendors = filterText
-    ? vendors.filter(vendor => {
+  const filteredSupervisors = filterText
+    ? supervisors.filter((supervisor) => {
+        const routesString = Array.isArray(supervisor.supervisorRoutes)
+          ? supervisor.supervisorRoutes.join(", ")
+          : "";
         return (
-          (vendor.name && vendor.name.toLowerCase().includes(filterText)) ||
-          (vendor.email && vendor.email.toLowerCase().includes(filterText)) ||
-          (vendor.phoneNo && vendor.phoneNo.toLowerCase().includes(filterText)) ||
-          (vendor.supervisorId && vendor.supervisorId.toLowerCase().includes(filterText)) ||
-          (vendor.route && vendor.route.toLowerCase().includes(filterText))
+          (supervisor.name && supervisor.name.toLowerCase().includes(filterText)) ||
+          (supervisor.email && supervisor.email.toLowerCase().includes(filterText)) ||
+          (supervisor.phoneNo && supervisor.phoneNo.toLowerCase().includes(filterText)) ||
+          (supervisor.supervisorId && supervisor.supervisorId.toLowerCase().includes(filterText)) ||
+          (routesString && routesString.toLowerCase().includes(filterText))
         );
       })
-    : vendors;
+    : supervisors;
 
   if (loading) {
     return (
@@ -124,7 +127,7 @@ export default function SupervisorsList() {
                 isHeader
                 className="px-5 py-3 text-start text-gray-500"
               >
-               Route
+               Routes
               </TableCell>
               <TableCell
                 isHeader
@@ -161,50 +164,52 @@ export default function SupervisorsList() {
 
           {/* Table Body */}
           <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-            {filteredVendors.map((vendor) => (
-              <TableRow key={vendor._id}>
+            {filteredSupervisors.map((supervisor) => (
+              <TableRow key={supervisor._id}>
                 <TableCell className="px-5 py-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 flex justify-center items-center rounded-full">
                       <UserCircleIcon width={28} height={28} />
                     </div>
                     <span className="font-medium text-gray-800 dark:text-white">
-                      {vendor.name}
+                      {supervisor.name}
                     </span>
                   </div>
                 </TableCell>
                 <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
-                  {vendor.supervisorId}
+                  {supervisor.supervisorId}
                 </TableCell>
                 <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
-                  {vendor.route}
+                  {Array.isArray(supervisor.supervisorRoutes)
+                    ? supervisor.supervisorRoutes.join(", ")
+                    : ""}
                 </TableCell>
                 <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
                   <a
-                    href={`mailto:${vendor.email}`}
+                    href={`mailto:${supervisor.email}`}
                     className="hover:underline text-blue-800 dark:text-blue-400"
                   >
-                    {vendor.email}
+                    {supervisor.email}
                   </a>
                   <br />
                   <a
-                    href={`tel:${vendor.phoneNo}`}
+                    href={`tel:${supervisor.phoneNo}`}
                     className="hover:underline text-blue-800 dark:text-blue-400"
                   >
-                    {vendor.phoneNo}
+                    {supervisor.phoneNo}
                   </a>
                 </TableCell>
                 <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
-                  {vendor.address?.addressLine}
+                  {supervisor.address?.addressLine}
                 </TableCell>
                 <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
-                  {vendor.address?.city}
+                  {supervisor.address?.city}
                 </TableCell>
                 <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
-                  {vendor.address?.state}
+                  {supervisor.address?.state}
                 </TableCell>
                 <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
-                  {vendor.address?.pincode}
+                  {supervisor.address?.pincode}
                 </TableCell>
               </TableRow>
             ))}

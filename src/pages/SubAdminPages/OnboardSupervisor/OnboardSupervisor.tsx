@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Label from "../../../components/form/Label";
 import Input from "../../../components/form/input/InputField";
 import { EnvelopeIcon, UserCircleIcon } from "../../../icons";
@@ -9,6 +9,97 @@ import ComponentCard from "../../../components/common/ComponentCard";
 import PageBreadcrumb from "../../../components/common/PageBreadCrumb";
 import axios from "axios";
 
+
+
+interface MultiSelectOption {
+  label: string;
+  value: number | string;
+}
+
+interface MultiSelectProps {
+  options: MultiSelectOption[];
+  value: (number | string)[];
+  onChange: (val: (number | string)[]) => void;
+  placeholder?: string;
+}
+
+const MultiSelect = ({
+  options,
+  value,
+  onChange,
+  placeholder = "Select...",
+}: MultiSelectProps) => {
+  // Show selected chip tags for visual feedback
+  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selected = Array.from(e.target.selectedOptions, (opt) => {
+      // Try to maintain number type if possible
+      const found = options.find(o => String(o.value) === opt.value);
+      return found ? found.value : opt.value;
+    });
+    onChange(selected);
+  };
+
+  const selectedOptions = options.filter(opt => value.includes(opt.value));
+
+  return (
+    <div>
+      {/* Selected chips */}
+      <div className="flex flex-wrap gap-2 mb-1 min-h-[1.5rem]">
+        {selectedOptions.length === 0 && (
+          <span className="text-gray-400 text-sm">{placeholder}</span>
+        )}
+        {selectedOptions.map(opt => (
+          <span
+            key={opt.value}
+            className="inline-flex items-center bg-blue-100 text-blue-700 rounded-full px-3 py-1 text-xs font-medium mr-1"
+          >
+            {opt.label}
+            <button
+              type="button"
+              className="ml-2 text-blue-500 hover:text-blue-700 focus:outline-none"
+              aria-label={`Remove ${opt.label}`}
+              onClick={() =>
+                onChange(value.filter(v => v !== opt.value))
+              }
+            >
+              ×
+            </button>
+          </span>
+        ))}
+      </div>
+      <div className="relative">
+        <select
+          multiple
+          value={value.map(String)}
+          onChange={handleSelectChange}
+          className="w-full border border-gray-300 focus:border-blue-400 focus:ring focus:ring-blue-100 rounded px-4 py-2 bg-white appearance-none transition-shadow"
+          size={Math.min(6, Math.max(options.length, 2))}
+        >
+          {options.length === 0 ? (
+            <option disabled value="">
+              No routes available
+            </option>
+          ) : (
+            options.map(opt => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))
+          )}
+        </select>
+        <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
+          <svg width="16" height="16" fill="none" className="mt-1">
+            <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </div>
+      </div>
+      <div className="mt-1 text-xs text-gray-500">
+        Hold <kbd className="px-1 py-0.5 bg-gray-100 rounded border text-xs font-mono">Ctrl</kbd> ( <kbd>Cmd</kbd> on Mac ) to select multiple routes.
+      </div>
+    </div>
+  );
+};
+
 const countries = [
   { code: "IN", label: "+91" },
   { code: "US", label: "+1" },
@@ -17,7 +108,6 @@ const countries = [
   { code: "AU", label: "+61" },
 ];
 
-// Define the type for the error state to ensure variant is one of the allowed types
 interface AlertState {
   isEnable: boolean;
   variant: "success" | "error" | "warning" | "info";
@@ -26,32 +116,85 @@ interface AlertState {
 }
 
 const OnboardSupervisor = () => {
-  const [supervisorCode, setsupervisorCode] = useState<string | undefined>(undefined);
+  const [supervisorCode, setsupervisorCode] = useState<string | undefined>(
+    undefined
+  );
 
   const [email, setEmail] = useState<string | undefined>(undefined);
   const [phoneNo, setPhoneNo] = useState<string | undefined>(undefined);
   const [name, setName] = useState<string | undefined>(undefined);
-  // New state variables for address fields
   const [addressLine, setAddressLine] = useState<string | undefined>(undefined);
   const [city, setCity] = useState<string | undefined>(undefined);
   const [state, setState] = useState<string | undefined>(undefined);
   const [pinCode, setPinCode] = useState<string | undefined>(undefined);
-  // Add route state
-  const [route, setRoute] = useState<string | undefined>(undefined);
+
+  // Updated: Route is now an array of numbers.
+  const [routes, setRoutes] = useState<number[]>([]);
+  const [routesOptions, setRoutesOptions] = useState<
+    { value: number; label: string }[]
+  >([]);
+  const [loadingRoutes, setLoadingRoutes] = useState<boolean>(false);
 
   const [alert, setAlert] = useState<AlertState>({
-    isEnable: false, // Initially disabled, only show when an alert occurs
-    variant: "info", // Default variant, will be overridden on alert
+    isEnable: false,
+    variant: "info",
     title: "",
     message: "",
   });
 
+  useEffect(() => {
+    const fetchRoutes = async () => {
+      setLoadingRoutes(true);
+      try {
+        const token = localStorage.getItem("sub-admin-token");
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL}/api/sub-admin/get-all-routes`,
+          {
+            headers: {
+              Authorization: `${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        // response.data.routes should be array of routes
+        if (response.status === 200 && Array.isArray(response.data.routes)) {
+          // Expecting routeNo or _id or number property, adapt below as needed
+          setRoutesOptions(
+            response.data.routes.map((route: any) => ({
+              value: route.route,
+              label: route.route
+                ? `Route ${route.route}`
+                : String(route.route ?? route._id ?? route.route),
+            }))
+          );
+        } else {
+          setRoutesOptions([]);
+        }
+      } catch (error: any) {
+        setRoutesOptions([]);
+      }
+      setLoadingRoutes(false);
+    };
+    fetchRoutes();
+  }, []);
+
   const handlePhoneNumberChange = (phoneNumber: string) => {
-    console.log("Updated phone number:", phoneNumber);
     setPhoneNo(phoneNumber);
   };
 
+  // Helper: for the Route dropdown to only store numbers in state:
+  const handleRoutesChange = (selected: (string | number)[]) => {
+    // all values in routesOptions.value are numbers or strings of numbers, so map to numbers
+    const numericValues: number[] = selected
+      .map((val) => (typeof val === "number" ? val : Number(val)))
+      // filter NaN or empty
+      .filter((val): val is number => typeof val === "number" && !isNaN(val));
+    setRoutes(numericValues);
+  };
+
   const handleOnboardSupervisor = async () => {
+    console.log(routes);
+
     setAlert({
       isEnable: false,
       variant: "info",
@@ -70,7 +213,6 @@ const OnboardSupervisor = () => {
       return;
     }
 
-    // Basic Supervisor code validation (e.g., 6 digits, adjust as needed)
     const supervisorCodeRegex = /^\d{6}$/;
     if (!supervisorCodeRegex.test(supervisorCode)) {
       setAlert({
@@ -102,7 +244,6 @@ const OnboardSupervisor = () => {
       return;
     }
 
-    // Basic email validation regex
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setAlert({
@@ -124,7 +265,6 @@ const OnboardSupervisor = () => {
       return;
     }
 
-    // Assuming phoneNo includes country code and is 13 chars long, e.g., +911234567890
     if (phoneNo.length !== 13) {
       setAlert({
         isEnable: true,
@@ -136,7 +276,6 @@ const OnboardSupervisor = () => {
       return;
     }
 
-    // Address field validations
     if (!addressLine) {
       setAlert({
         isEnable: true,
@@ -177,7 +316,6 @@ const OnboardSupervisor = () => {
       return;
     }
 
-    // Basic pin code validation (e.g., 6 digits for India, adjust as needed)
     const pinCodeRegex = /^\d{6}$/;
     if (!pinCodeRegex.test(pinCode)) {
       setAlert({
@@ -189,48 +327,37 @@ const OnboardSupervisor = () => {
       return;
     }
 
-    // Route validation (optional example: required field)
-    if (!route) {
+    // Route is now required to have at least one selected option
+    if (!routes || routes.length === 0) {
       setAlert({
         isEnable: true,
         variant: "error",
-        title: "Missing Route",
-        message: "Please enter the Supervisor's route.",
+        title: "Missing Route(s)",
+        message: "Please select at least one route for the Supervisor.",
       });
       return;
     }
 
-    // If all validations pass
-    console.log("Supervisor data is valid:");
-    console.log("Supervisor Code:", supervisorCode);
-    console.log("Name:", name);
-    console.log("Email:", email);
-    console.log("Phone No:", phoneNo);
-    console.log("Address Line:", addressLine);
-    console.log("City:", city);
-    console.log("State:", state);
-    console.log("Pin Code:", pinCode);
-    console.log("Route:", route);
-
+    // All validations pass
     try {
       const token = localStorage.getItem("sub-admin-token");
 
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL}/api/sub-admin/onboard-supervisor`,
         {
-          supervisorId: supervisorCode, // backend expects SupervisorId, not supervisorCode
+          supervisorId: supervisorCode,
           name,
           email,
-          phoneNumber: phoneNo, // backend expects phoneNumber
+          phoneNumber: phoneNo,
           addressLine,
           city,
           state,
-          pincode: pinCode, // backend expects pincode, not pinCode
-          route, // new field
+          pincode: pinCode,
+          routes, // Now an array of numbers
         },
         {
           headers: {
-            Authorization: `${token}`, // send token for auth
+            Authorization: `${token}`,
             "Content-Type": "application/json",
           },
         }
@@ -241,10 +368,10 @@ const OnboardSupervisor = () => {
           isEnable: true,
           variant: "success",
           title: "Success",
-          message: response.data.message || "Supervisor onboarded successfully!",
+          message:
+            response.data.message || "Supervisor onboarded successfully!",
         });
 
-        // Optionally clear form after success
         setsupervisorCode("");
         setName("");
         setEmail("");
@@ -253,7 +380,7 @@ const OnboardSupervisor = () => {
         setCity("");
         setState("");
         setPinCode("");
-        setRoute("");
+        setRoutes([]); // Clear multi-select
       }
     } catch (error: any) {
       console.error("Error onboarding Supervisor:", error);
@@ -337,18 +464,19 @@ const OnboardSupervisor = () => {
               onChange={handlePhoneNumberChange}
             />
           </div>
-          {/* Route Field */}
+          {/* Route Field - Multi Select Dropdown */}
           <div>
             <Label>Route</Label>
-            <div className="relative">
-              <Input
-                placeholder="Route Name or Number"
-                type="text"
-                name="route"
-                value={route}
-                onChange={(e) => setRoute(e.target.value)}
+            {loadingRoutes ? (
+              <p>Loading routes...</p>
+            ) : (
+              <MultiSelect
+                options={routesOptions}
+                value={routes}
+                onChange={handleRoutesChange}
+                placeholder="Select route(s)..."
               />
-            </div>
+            )}
           </div>
           {/* New Address Fields */}
           <div>
@@ -399,7 +527,9 @@ const OnboardSupervisor = () => {
               />
             </div>
           </div>
-          <Button onClick={handleOnboardSupervisor}>Handle Onboard Supervisor</Button>
+          <Button onClick={handleOnboardSupervisor}>
+            Handle Onboard Supervisor
+          </Button>
         </ComponentCard>
       </div>
     </div>

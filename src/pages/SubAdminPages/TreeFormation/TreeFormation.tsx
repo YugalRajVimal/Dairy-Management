@@ -22,7 +22,7 @@ interface Vendor {
     state: string;
     pincode: string;
   };
-  route: string;
+  route: string | number;
 }
 
 interface Supervisor {
@@ -37,13 +37,13 @@ interface Supervisor {
     state: string;
     pincode: string;
   };
-  route: string;
+  supervisorRoutes: number[]; // route is now array of numbers
 }
 
 const TreeFormation = () => {
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [supervisors, setSupervisors] = useState<Supervisor[]>([]);
-  const [expandedRoutes, setExpandedRoutes] = useState<string[]>([]);
+  const [expandedRoutes, setExpandedRoutes] = useState<(number | string)[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<string>("");
@@ -77,31 +77,35 @@ const TreeFormation = () => {
     fetchData();
   }, []);
 
-  const toggleExpand = (route: string) => {
-    setExpandedRoutes((prev) =>
-      prev.includes(route) ? prev.filter((r) => r !== route) : [...prev, route]
-    );
-  };
+
 
   // --- Filter logic ---
-  // Filter on: name, email, phoneNo, nickName (not present in sup/vendors), _id, vendorId, supervisorId, route
   const filterText = filter.trim().toLowerCase();
 
-  // Supervisors to render (including only those matching filter, or have vendors matching filter)
   const filteredSupervisors = filterText
     ? supervisors.filter((supervisor) => {
-        // Supervisor fields
         const matchSupervisor =
           (supervisor.name && supervisor.name.toLowerCase().includes(filterText)) ||
           (supervisor.email && supervisor.email.toLowerCase().includes(filterText)) ||
           (supervisor.phoneNo && supervisor.phoneNo.toLowerCase().includes(filterText)) ||
           (supervisor._id && supervisor._id.toLowerCase().includes(filterText)) ||
           (supervisor.supervisorId && supervisor.supervisorId.toLowerCase().includes(filterText)) ||
-          (supervisor.route && supervisor.route.toLowerCase().includes(filterText));
+          (Array.isArray(supervisor.supervisorRoutes) &&
+            supervisor.supervisorRoutes.some(r =>
+              String(r).toLowerCase().includes(filterText)
+            ));
         if (matchSupervisor) return true;
 
-        // Related vendors for supervisor's route
-        const relatedVendors = vendors.filter(v => v.route === supervisor.route);
+        let relatedVendors: Vendor[] = [];
+        if (Array.isArray(supervisor.supervisorRoutes)) {
+          relatedVendors = vendors.filter(
+            (v) =>
+              typeof v.route !== "undefined" &&
+              supervisor.supervisorRoutes.includes(
+                typeof v.route === "string" ? Number(v.route) : v.route
+              )
+          );
+        }
         for (const vendor of relatedVendors) {
           const matchVendor =
             (vendor.name && vendor.name.toLowerCase().includes(filterText)) ||
@@ -109,7 +113,8 @@ const TreeFormation = () => {
             (vendor.phoneNo && vendor.phoneNo.toLowerCase().includes(filterText)) ||
             (vendor._id && vendor._id.toLowerCase().includes(filterText)) ||
             (vendor.vendorId && vendor.vendorId.toLowerCase().includes(filterText)) ||
-            (vendor.route && vendor.route.toLowerCase().includes(filterText));
+            (vendor.route &&
+              String(vendor.route).toLowerCase().includes(filterText));
           if (matchVendor) return true;
         }
         return false;
@@ -125,7 +130,7 @@ const TreeFormation = () => {
 
   if (error)
     return (
-      <div className="p-4 text-red-600 bg-red-100 border border-red-300 rounded-md">
+      <div className="p-4 text-red-600 bg-red-100 border border-red-300 rounded-md text-center">
         {error}
       </div>
     );
@@ -134,10 +139,10 @@ const TreeFormation = () => {
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
       <div className="max-w-full overflow-x-auto">
         {/* Filter Input */}
-        <div className="p-4">
+        <div className="p-4 flex justify-center">
           <input
             type="text"
-            className="w-full max-w-md px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500"
+            className="w-full max-w-md px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 text-center"
             placeholder="Search by Name, Email, Phone No, ID, Vendor ID, Supervisor ID or Route..."
             value={filter}
             onChange={e => setFilter(e.target.value)}
@@ -149,31 +154,31 @@ const TreeFormation = () => {
             <TableRow>
               <TableCell
                 isHeader
-                className="px-5 py-3 text-start text-gray-500"
+                className="px-5 py-3 text-center text-gray-500"
               >
                 Name
               </TableCell>
               <TableCell
                 isHeader
-                className="px-5 py-3 text-start text-gray-500"
+                className="px-5 py-3 text-center text-gray-500"
               >
                 Id
               </TableCell>
               <TableCell
                 isHeader
-                className="px-5 py-3 text-start text-gray-500"
+                className="px-5 py-3 text-center text-gray-500"
               >
-                Route
+                Routes
               </TableCell>
               <TableCell
                 isHeader
-                className="px-5 py-3 text-start text-gray-500"
+                className="px-5 py-3 text-center text-gray-500"
               >
                 Email & Phone No.
               </TableCell>
               <TableCell
                 isHeader
-                className="px-5 py-3 text-start text-gray-500"
+                className="px-5 py-3 text-center text-gray-500"
               >
                 Address Line, City, State, Pincode
               </TableCell>
@@ -183,10 +188,16 @@ const TreeFormation = () => {
           {/* Body */}
           <TableBody className="divide-y divide-gray-100">
             {filteredSupervisors.map((supervisor) => {
-              // Only show related vendors that also match filter (if filter is applied)
-              let relatedVendors = vendors.filter(
-                (v) => v.route === supervisor.route
-              );
+              let relatedVendors: Vendor[] = [];
+              if (Array.isArray(supervisor.supervisorRoutes)) {
+                relatedVendors = vendors.filter(
+                  (v) =>
+                    typeof v.route !== "undefined" &&
+                    supervisor.supervisorRoutes.includes(
+                      typeof v.route === "string" ? Number(v.route) : v.route
+                    )
+                );
+              }
               if (filterText) {
                 relatedVendors = relatedVendors.filter(vendor =>
                   (vendor.name && vendor.name.toLowerCase().includes(filterText)) ||
@@ -194,23 +205,31 @@ const TreeFormation = () => {
                   (vendor.phoneNo && vendor.phoneNo.toLowerCase().includes(filterText)) ||
                   (vendor._id && vendor._id.toLowerCase().includes(filterText)) ||
                   (vendor.vendorId && vendor.vendorId.toLowerCase().includes(filterText)) ||
-                  (vendor.route && vendor.route.toLowerCase().includes(filterText))
+                  (vendor.route &&
+                    String(vendor.route).toLowerCase().includes(filterText))
                 );
-                // ...BUT if supervisor itself matched, we show all vendors under them
                 const matchSupervisor =
                   (supervisor.name && supervisor.name.toLowerCase().includes(filterText)) ||
                   (supervisor.email && supervisor.email.toLowerCase().includes(filterText)) ||
                   (supervisor.phoneNo && supervisor.phoneNo.toLowerCase().includes(filterText)) ||
                   (supervisor._id && supervisor._id.toLowerCase().includes(filterText)) ||
                   (supervisor.supervisorId && supervisor.supervisorId.toLowerCase().includes(filterText)) ||
-                  (supervisor.route && supervisor.route.toLowerCase().includes(filterText));
-                if (matchSupervisor) {
+                  (Array.isArray(supervisor.supervisorRoutes) &&
+                    supervisor.supervisorRoutes.some(r =>
+                      String(r).toLowerCase().includes(filterText)
+                    ));
+                if (matchSupervisor && Array.isArray(supervisor.supervisorRoutes)) {
                   relatedVendors = vendors.filter(
-                    (v) => v.route === supervisor.route
+                    (v) =>
+                      typeof v.route !== "undefined" &&
+                      supervisor.supervisorRoutes.includes(
+                        typeof v.route === "string" ? Number(v.route) : v.route
+                      )
                   );
                 }
               }
-              const isExpanded = expandedRoutes.includes(supervisor.route);
+
+              const expanded = expandedRoutes.includes(supervisor._id);
 
               return (
                 <>
@@ -219,15 +238,15 @@ const TreeFormation = () => {
                     key={supervisor._id}
                     className="cursor-pointer hover:bg-gray-50"
                   >
-                    <TableCell className="px-5 py-4 flex items-center gap-3">
-                      {isExpanded ? (
+                    <TableCell className="px-5 py-4 flex items-center gap-3 justify-center">
+                      {expanded ? (
                         <ChevronDownIcon
-                          onClick={() => toggleExpand(supervisor.route)}
+                          onClick={() => setExpandedRoutes(expandedRoutes.filter((r) => r !== supervisor._id))}
                           className="w-5 h-5 text-gray-500"
                         />
                       ) : (
                         <ChevronUpIcon
-                          onClick={() => toggleExpand(supervisor.route)}
+                          onClick={() => setExpandedRoutes([...expandedRoutes, supervisor._id])}
                           className="w-5 h-5 text-gray-500"
                         />
                       )}
@@ -236,9 +255,13 @@ const TreeFormation = () => {
                         {supervisor.name} (Supervisor)
                       </span>
                     </TableCell>
-                    <TableCell>{supervisor.supervisorId}</TableCell>
-                    <TableCell>{supervisor.route}</TableCell>
-                    <TableCell>
+                    <TableCell className="text-center">{supervisor.supervisorId}</TableCell>
+                    <TableCell className="text-center">
+                      {Array.isArray(supervisor.supervisorRoutes)
+                        ? supervisor.supervisorRoutes.join(", ")
+                        : ""}
+                    </TableCell>
+                    <TableCell className="text-center">
                       <a
                         href={`mailto:${supervisor.email}`}
                         className="text-blue-600 hover:underline"
@@ -248,7 +271,7 @@ const TreeFormation = () => {
                       <br />
                       {supervisor.phoneNo}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-center">
                       {supervisor.address?.addressLine},{" "}
                       {supervisor.address?.city}, {supervisor.address?.state},{" "}
                       {supervisor.address?.pincode}
@@ -256,19 +279,19 @@ const TreeFormation = () => {
                   </TableRow>
 
                   {/* Vendors under Supervisor */}
-                  {isExpanded &&
+                  {expanded &&
                     relatedVendors.map((vendor) => (
                       <TableRow
                         key={vendor._id}
                         className=" border-l-4 border-blue-400 bg-blue-200"
                       >
-                        <TableCell className="px-10 py-3 flex items-center gap-3">
+                        <TableCell className="px-10 py-3 flex items-center gap-3 justify-center">
                           <UserCircleIcon width={22} height={22} />
                           <span>{vendor.name} (Vendor)</span>
                         </TableCell>
-                        <TableCell>{vendor.vendorId}</TableCell>
-                        <TableCell>{vendor.route}</TableCell>
-                        <TableCell>
+                        <TableCell className="text-center">{vendor.vendorId}</TableCell>
+                        <TableCell className="text-center">{vendor.route}</TableCell>
+                        <TableCell className="text-center">
                           <a
                             href={`mailto:${vendor.email}`}
                             className="text-blue-600 hover:underline"
@@ -278,7 +301,7 @@ const TreeFormation = () => {
                           <br />
                           {vendor.phoneNo}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="text-center">
                           {vendor.address?.addressLine},{" "}
                           {vendor.address?.city},{" "}
                           {vendor.address?.state},{" "}
