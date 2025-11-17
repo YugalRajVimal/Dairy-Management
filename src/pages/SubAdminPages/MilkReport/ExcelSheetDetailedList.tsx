@@ -191,6 +191,29 @@ interface MilkReport {
   [key: string]: any;
 }
 
+// Helper function to check if value is a valid date string (or object)
+function isDateLike(val: any) {
+  if (typeof val === "string" || val instanceof Date) {
+    const d = new Date(val);
+    return !isNaN(d.getTime()) && d.getFullYear() > 1970 && d.getFullYear() < 2100;
+  }
+  return false;
+}
+
+function formatAnyDate(val: any, withTime = false) {
+  // Only attempt date formatting if it's date-like
+  if (isDateLike(val)) {
+    const date = new Date(val);
+    return new Intl.DateTimeFormat("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      ...(withTime && { hour: "2-digit", minute: "2-digit" }),
+    }).format(date);
+  }
+  return val;
+}
+
 export default function SubAdminExcelDataTable() {
   const API_URL = import.meta.env.VITE_API_URL;
   const [reports, setReports] = useState<MilkReport[]>([]);
@@ -223,7 +246,7 @@ export default function SubAdminExcelDataTable() {
         snfPercentage: editData.snfPercentage,
       };
 
-       await axios.put(
+      await axios.put(
         `${API_URL}/api/sub-admin/update-milk-report/${id}`,
         body,
         {
@@ -282,6 +305,7 @@ export default function SubAdminExcelDataTable() {
     }
   };
 
+  // Legacy formatDate for explicit field rules
   const formatDate = (value: string | Date | null, withTime = false) => {
     if (!value) return "";
     const date = new Date(value);
@@ -303,8 +327,10 @@ export default function SubAdminExcelDataTable() {
     ? reports.filter((row) => {
         const rowStr = columns
           .map((col) => {
+            // For search, attempt to format as date if value is date-like, else as string
             if (col === "uploadedOn") return formatDate(row[col], true);
             if (col === "docDate") return formatDate(row[col]);
+            if (isDateLike(row[col])) return formatAnyDate(row[col], true);
             return row[col] ? String(row[col]) : "";
           })
           .join(" ")
@@ -315,85 +341,132 @@ export default function SubAdminExcelDataTable() {
 
   if (loading) return <p className="p-4 text-gray-500">Loading reports...</p>;
   if (!filteredReports.length)
-    return <p className="p-4 text-gray-500">No data available</p>;
+    return (
+      <p className="p-4 text-gray-500">
+        <input
+          type="text"
+          className="w-full bg-white max-w-md px-4 py-2 border rounded-lg"
+          placeholder="Search in all columns..."
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+        />
+        <br />
+        No data available
+      </p>
+    );
 
   return (
-    <>
-      <div className="overflow-hidden rounded-xl border bg-white">
-        <div className="max-w-full overflow-x-auto">
-          {/* FILTER INPUT */}
-          <div className="p-4">
-            <input
-              type="text"
-              className="w-full max-w-md px-4 py-2 border rounded-lg"
-              placeholder="Search in all columns..."
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-            />
-          </div>
+    <div className="w-full space-y-6">
+      {/* PAGE HEADER */}
+      <div className="flex flex-col gap-1 px-1">
+        <h1 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
+          Milk Report Records
+        </h1>
+        <p className="text-gray-500 dark:text-gray-400 text-sm">
+          View, filter, edit & track history of uploaded milk reports.
+        </p>
+      </div>
 
+      {/* SEARCH BAR */}
+      <div className="bg-white dark:bg-gray-900 shadow-sm border rounded-xl p-4">
+        <div className="relative max-w-sm w-full">
+          <input
+            type="text"
+            placeholder="Search in all fields..."
+            className="w-full px-4 py-2 pr-10 rounded-lg border 
+                       bg-gray-50 dark:bg-gray-800 dark:text-gray-200
+                       focus:ring-2 focus:ring-brand-500 outline-none"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+          />
+          {filter && (
+            <button
+              onClick={() => setFilter("")}
+              className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+            >
+              ✖
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* TABLE CARD */}
+      <div className="overflow-hidden rounded-xl border bg-white dark:bg-gray-900 shadow">
+        <div className="max-w-full overflow-x-auto">
           <Table>
-            {/* TABLE HEADER */}
-            <TableHeader>
+            {/* HEADER */}
+            <TableHeader className="bg-gray-100 dark:bg-gray-800 sticky top-0 z-10">
               <TableRow>
                 {columns
-                  .filter((col) => col !== "edited")
+                  .filter((c) => c !== "edited")
                   .map((col) => (
                     <TableCell
                       key={col}
                       isHeader
-                      className="px-5 py-3 font-medium"
+                      className="px-5 py-3 font-semibold uppercase text-xs text-gray-600 dark:text-gray-300"
                     >
                       {col}
                     </TableCell>
                   ))}
-                <TableCell isHeader className="font-medium">
+
+                <TableCell
+                  isHeader
+                  className="px-5 py-3 font-semibold uppercase text-xs"
+                >
                   Action
                 </TableCell>
+
                 {columns.includes("edited") && (
-                  <TableCell isHeader className="px-5 py-3 font-medium">
-                    edited
+                  <TableCell
+                    isHeader
+                    className="px-5 py-3 font-semibold uppercase text-xs"
+                  >
+                    History
                   </TableCell>
                 )}
               </TableRow>
             </TableHeader>
 
-            {/* TABLE BODY */}
+            {/* BODY */}
             <TableBody>
               {filteredReports.map((row, idx) => (
-                <TableRow key={idx}>
+                <TableRow
+                  key={idx}
+                  className="hover:bg-gray-50 dark:hover:bg-gray-800/50 dark:text-white transition"
+                >
                   {columns
-                    .filter((col) => col !== "edited")
+                    .filter((c) => c !== "edited")
                     .map((col) => (
                       <TableCell key={col} className="px-4 py-3">
-                        {col === "uploadedOn"
-                          ? formatDate(row[col], true)
-                          : col === "docDate"
-                          ? formatDate(row[col])
-                          : row[col] ?? ""}
+                        {
+                          // Format any date found, or else show as string
+                          (col === "uploadedOn" || col === "createdAt" || col.toLowerCase().includes("date") || isDateLike(row[col]))
+                            ? formatAnyDate(row[col], col === "uploadedOn" || col.toLowerCase() === "createdat" || col === "createdAt" || col === "uploadedOn" ? true : false)
+                            : row[col] ?? ""
+                        }
                       </TableCell>
                     ))}
 
                   <TableCell className="px-4 py-3">
-                    <Button onClick={() => openEditModal(row)}>Edit</Button>
+                    <Button
+                      className="!px-3 !py-1"
+                      onClick={() => openEditModal(row)}
+                    >
+                      Edit
+                    </Button>
                   </TableCell>
-                  {/* EDITED COLUMN WITH HISTORY BUTTON */}
+
                   {columns.includes("edited") && (
                     <TableCell className="px-4 py-3 text-center">
                       {row.edited ? (
-                        <>
-                          <Button
-                            onClick={() =>
-                              setSelectedHistory(row.history || [])
-                            }
-                          >
-                            Show History
-                          </Button>
-                        </>
+                        <Button
+                          className="!px-3 !py-1"
+                          onClick={() => setSelectedHistory(row.history || [])}
+                        >
+                          View
+                        </Button>
                       ) : (
-                        <>
-                          <span className="text-gray-400">No History</span>
-                        </>
+                        <span className="text-gray-400 text-sm">None</span>
                       )}
                     </TableCell>
                   )}
@@ -404,42 +477,47 @@ export default function SubAdminExcelDataTable() {
         </div>
 
         {/* PAGINATION */}
-        <div className="flex justify-between items-center p-4">
-          <Button disabled={page <= 1} onClick={() => setPage(page - 1)}>
+        <div className="flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-800">
+          <Button
+            disabled={page <= 1}
+            onClick={() => setPage(page - 1)}
+            className="rounded-full px-4"
+          >
             Previous
           </Button>
-          <p className="text-gray-500">
-            Page {page} of {totalPages}
-          </p>
+
+          <span className="text-gray-600 dark:text-gray-300 text-sm">
+            Page <strong>{page}</strong> of {totalPages}
+          </span>
+
           <Button
             disabled={page >= totalPages}
             onClick={() => setPage(page + 1)}
+            className="rounded-full px-4"
           >
             Next
           </Button>
         </div>
       </div>
 
-      {/* HISTORY MODAL */}
+      {/* ------------------- HISTORY MODAL ------------------- */}
       <Modal
         isOpen={!!selectedHistory}
         onClose={() => setSelectedHistory(null)}
-        className="p-4 text-center"
+        className="p-6 max-w-7xl rounded-xl bg-white dark:bg-gray-900  shadow-lg"
       >
-        <h2 className="text-lg font-semibold mb-4 text-center">
-          Milk Report History
-        </h2>
+        <h2 className="text-xl font-semibold mb-4">Change History</h2>
 
         {selectedHistory && selectedHistory.length > 0 ? (
-          <div className="max-w-full overflow-x-auto">
+          <div className="max-w-full overflow-x-auto border rounded-lg dark:text-black ">
             <Table>
-              <TableHeader>
+              <TableHeader className="bg-gray-100 dark:bg-gray-100">
                 <TableRow>
                   {Object.keys(selectedHistory[0]).map((col) => (
                     <TableCell
                       key={col}
                       isHeader
-                      className="px-5 py-3 font-medium"
+                      className="px-5 py-3 font-semibold uppercase text-xs"
                     >
                       {col}
                     </TableCell>
@@ -447,16 +525,19 @@ export default function SubAdminExcelDataTable() {
                 </TableRow>
               </TableHeader>
 
-              <TableBody>
+              <TableBody className="dark:text-white">
                 {selectedHistory.map((h, idx) => (
                   <TableRow key={idx}>
                     {Object.keys(h).map((col) => (
                       <TableCell key={col} className="px-4 py-3">
-                        {col === "changedOn"
-                          ? formatDate(h[col], true)
-                          : typeof h[col] === "object"
-                          ? JSON.stringify(h[col])
-                          : String(h[col] ?? "")}
+                        {
+                          // For every cell in history, format date if value is date-like or col name is a date (changedOn etc)
+                          (col.toLowerCase().includes("date") || col.toLowerCase().includes("time") || isDateLike(h[col]))
+                            ? formatAnyDate(h[col], col === "changedOn" || col.toLowerCase().includes("time"))
+                            : typeof h[col] === "object"
+                            ? JSON.stringify(h[col])
+                            : String(h[col] ?? "")
+                        }
                       </TableCell>
                     ))}
                   </TableRow>
@@ -465,113 +546,60 @@ export default function SubAdminExcelDataTable() {
             </Table>
           </div>
         ) : (
-          <p className="text-gray-500 text-center">No history available</p>
+          <p className="text-gray-500">No history available.</p>
         )}
       </Modal>
 
+      {/* ------------------- EDIT MODAL ------------------- */}
       <Modal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
-        className="p-6 max-w-lg"
+        className="p-6 max-w-lg bg-white dark:bg-gray-100 rounded-xl shadow-lg"
       >
         <h2 className="text-xl font-semibold mb-4">Edit Milk Report</h2>
 
         {editData && (
           <div className="space-y-4">
-            {/* docDate */}
-            <div>
-              <label className="font-medium">Document Date</label>
-              <input
-                type="date"
-                value={editData.docDate?.slice(0, 10) || ""}
-                onChange={(e) =>
-                  setEditData({ ...editData, docDate: e.target.value })
-                }
-                className="w-full px-3 py-2 border rounded"
-              />
-            </div>
+            {[
+              { label: "Document Date", key: "docDate", type: "date" },
+              { label: "Shift", key: "shift", type: "text" },
+              { label: "VLC Name", key: "vlcName", type: "text" },
+              {
+                label: "Milk Weight (Ltr)",
+                key: "milkWeightLtr",
+                type: "number",
+              },
+              { label: "Fat %", key: "fatPercentage", type: "number" },
+              { label: "SNF %", key: "snfPercentage", type: "number" },
+            ].map((f) => (
+              <div key={f.key}>
+                <label className="font-medium text-sm">{f.label}</label>
+                <input
+                  type={f.type}
+                  value={f.type === "date" && isDateLike(editData[f.key])
+                    ? (new Date(editData[f.key]).toISOString().slice(0, 10))
+                    : String(editData[f.key] ?? "")
+                  }
+                  onChange={(e) =>
+                    setEditData({
+                      ...editData,
+                      [f.key]:
+                        f.type === "number"
+                          ? Number(e.target.value)
+                          : e.target.value,
+                    })
+                  }
+                  className="w-full px-3 py-2 border rounded-lg dark:bg-gray-800 dark:text-gray-200"
+                />
+              </div>
+            ))}
 
-            {/* shift */}
-            <div>
-              <label className="font-medium">Shift</label>
-              <input
-                type="text"
-                value={editData.shift}
-                onChange={(e) =>
-                  setEditData({ ...editData, shift: e.target.value })
-                }
-                className="w-full px-3 py-2 border rounded"
-                placeholder="Enter shift (e.g., Morning or Evening)"
-              />
-            </div>
-
-            {/* vlcName */}
-            <div>
-              <label className="font-medium">VLC Name</label>
-              <input
-                type="text"
-                value={editData.vlcName}
-                onChange={(e) =>
-                  setEditData({ ...editData, vlcName: e.target.value })
-                }
-                className="w-full px-3 py-2 border rounded"
-              />
-            </div>
-
-            {/* milkWeightLtr */}
-            <div>
-              <label className="font-medium">Milk Weight (Ltr)</label>
-              <input
-                type="number"
-                value={editData.milkWeightLtr}
-                onChange={(e) =>
-                  setEditData({
-                    ...editData,
-                    milkWeightLtr: Number(e.target.value),
-                  })
-                }
-                className="w-full px-3 py-2 border rounded"
-              />
-            </div>
-
-            {/* fatPercentage */}
-            <div>
-              <label className="font-medium">Fat %</label>
-              <input
-                type="number"
-                step="0.01"
-                value={editData.fatPercentage}
-                onChange={(e) =>
-                  setEditData({
-                    ...editData,
-                    fatPercentage: Number(e.target.value),
-                  })
-                }
-                className="w-full px-3 py-2 border rounded"
-              />
-            </div>
-
-            {/* snfPercentage */}
-            <div>
-              <label className="font-medium">SNF %</label>
-              <input
-                type="number"
-                step="0.01"
-                value={editData.snfPercentage}
-                onChange={(e) =>
-                  setEditData({
-                    ...editData,
-                    snfPercentage: Number(e.target.value),
-                  })
-                }
-                className="w-full px-3 py-2 border rounded"
-              />
-            </div>
-
-            <Button onClick={handleUpdateReport}>Update Report</Button>
+            <Button className="w-full mt-3" onClick={handleUpdateReport}>
+              Save Changes
+            </Button>
           </div>
         )}
       </Modal>
-    </>
+    </div>
   );
 }

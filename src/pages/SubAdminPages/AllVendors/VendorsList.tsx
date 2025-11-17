@@ -61,16 +61,27 @@ export default function VendorsList() {
   }, []);
 
   // Filtering logic: filter by name, email, phoneNo, vendorId, or route
-  const filterText = filter.trim().toLowerCase();
-  const filteredVendors = filterText
-    ? vendors.filter(vendor => (
-        (vendor.name && vendor.name.toLowerCase().includes(filterText)) ||
-        (vendor.email && vendor.email.toLowerCase().includes(filterText)) ||
-        (vendor.phoneNo && vendor.phoneNo.toLowerCase().includes(filterText)) ||
-        (vendor.vendorId && vendor.vendorId.toLowerCase().includes(filterText)) ||
-        (vendor.route && vendor.route.toLowerCase().includes(filterText))
-      ))
-    : vendors;
+  // const filterText = filter.trim().toLowerCase();
+
+  const normalize = (value: any) =>
+    typeof value === "string" ? value.toLowerCase().trim() : "";
+
+  const filteredVendors = vendors.filter((vendor) => {
+    const search = filter.toLowerCase().trim();
+    if (!search) return true;
+
+    return (
+      normalize(vendor.name).includes(search) ||
+      normalize(vendor.email).includes(search) ||
+      normalize(vendor.phoneNo).includes(search) ||
+      normalize(vendor.vendorId).includes(search) ||
+      normalize(vendor.route).includes(search) ||
+      normalize(vendor.address?.addressLine).includes(search) ||
+      normalize(vendor.address?.city).includes(search) ||
+      normalize(vendor.address?.state).includes(search) ||
+      normalize(vendor.address?.pincode).includes(search)
+    );
+  });
 
   if (loading) {
     return (
@@ -98,7 +109,7 @@ export default function VendorsList() {
             className="w-full max-w-md px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700"
             placeholder="Search by Name, Email, Phone No, Vendor ID, or Route..."
             value={filter}
-            onChange={e => setFilter(e.target.value)}
+            onChange={(e) => setFilter(e.target.value)}
           />
         </div>
         <Table>

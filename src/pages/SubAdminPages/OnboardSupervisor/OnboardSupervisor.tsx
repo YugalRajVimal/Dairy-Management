@@ -9,8 +9,6 @@ import ComponentCard from "../../../components/common/ComponentCard";
 import PageBreadcrumb from "../../../components/common/PageBreadCrumb";
 import axios from "axios";
 
-
-
 interface MultiSelectOption {
   label: string;
   value: number | string;
@@ -32,7 +30,7 @@ const MultiSelect = ({
   // Show selected chip tags for visual feedback
   const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selected = Array.from(e.target.selectedOptions, (opt) => {
-      // Try to maintain number type if possible
+      // Try to maintain type as in options (number or string)
       const found = options.find(o => String(o.value) === opt.value);
       return found ? found.value : opt.value;
     });
@@ -81,7 +79,7 @@ const MultiSelect = ({
             </option>
           ) : (
             options.map(opt => (
-              <option key={opt.value} value={opt.value}>
+              <option key={opt.value} value={String(opt.value)}>
                 {opt.label}
               </option>
             ))
@@ -128,10 +126,10 @@ const OnboardSupervisor = () => {
   const [state, setState] = useState<string | undefined>(undefined);
   const [pinCode, setPinCode] = useState<string | undefined>(undefined);
 
-  // Updated: Route is now an array of numbers.
-  const [routes, setRoutes] = useState<number[]>([]);
+  // Route is now an array of number or string
+  const [routes, setRoutes] = useState<(number | string)[]>([]);
   const [routesOptions, setRoutesOptions] = useState<
-    { value: number; label: string }[]
+    { value: number | string; label: string }[]
   >([]);
   const [loadingRoutes, setLoadingRoutes] = useState<boolean>(false);
 
@@ -158,7 +156,6 @@ const OnboardSupervisor = () => {
         );
         // response.data.routes should be array of routes
         if (response.status === 200 && Array.isArray(response.data.routes)) {
-          // Expecting routeNo or _id or number property, adapt below as needed
           setRoutesOptions(
             response.data.routes.map((route: any) => ({
               value: route.route,
@@ -182,14 +179,9 @@ const OnboardSupervisor = () => {
     setPhoneNo(phoneNumber);
   };
 
-  // Helper: for the Route dropdown to only store numbers in state:
+  // Accept and set routes as (number | string)[]
   const handleRoutesChange = (selected: (string | number)[]) => {
-    // all values in routesOptions.value are numbers or strings of numbers, so map to numbers
-    const numericValues: number[] = selected
-      .map((val) => (typeof val === "number" ? val : Number(val)))
-      // filter NaN or empty
-      .filter((val): val is number => typeof val === "number" && !isNaN(val));
-    setRoutes(numericValues);
+    setRoutes(selected);
   };
 
   const handleOnboardSupervisor = async () => {
@@ -353,7 +345,7 @@ const OnboardSupervisor = () => {
           city,
           state,
           pincode: pinCode,
-          routes, // Now an array of numbers
+          routes, // Now an array of number | string
         },
         {
           headers: {

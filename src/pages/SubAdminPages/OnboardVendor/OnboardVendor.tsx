@@ -19,7 +19,7 @@ const countries = [
 
 interface RouteType {
   _id: string;
-  route: number; // route is integer now
+  route: string | number; // route can be string or number
 }
 
 // Define the type for the error state to ensure variant is one of the allowed types
@@ -41,8 +41,8 @@ const OnboardVendor = () => {
   const [city, setCity] = useState<string | undefined>(undefined);
   const [state, setState] = useState<string | undefined>(undefined);
   const [pinCode, setPinCode] = useState<string | undefined>(undefined);
-  // Store route as string temporarily for the select value, but guarantee integer usage
-  const [route, setRoute] = useState<string | undefined>(undefined);
+  // Store route as string temporarily for the select value, but allow string | number
+  const [route, setRoute] = useState<string | number | undefined>(undefined);
 
   const [routesOptions, setRoutesOptions] = useState<RouteType[]>([]);
   const [loadingRoutes, setLoadingRoutes] = useState<boolean>(false);
@@ -219,7 +219,12 @@ const OnboardVendor = () => {
     }
 
     // Route field validation (must select a route from the dropdown)
-    if (!route || isNaN(parseInt(route))) {
+    if (
+      route === undefined ||
+      route === "" ||
+      // If route is number, fine. If string check if not empty string.
+      (typeof route === "string" && route.trim() === "")
+    ) {
       setAlert({
         isEnable: true,
         variant: "error",
@@ -227,6 +232,15 @@ const OnboardVendor = () => {
         message: "Please select the Vendor's route.",
       });
       return;
+    }
+
+    // No need to coerce to number, but if it's a string and can be represented as a number, keep it as string. Let backend handle either.
+    let routeValue: string | number;
+    if (typeof route === "string" && !isNaN(Number(route))) {
+      // If the user selected a route that is "123", let it be as string or number as the backend accepts both
+      routeValue = route;
+    } else {
+      routeValue = route;
     }
 
     try {
@@ -243,8 +257,8 @@ const OnboardVendor = () => {
           city,
           state,
           pincode: pinCode,
-          // Pass route as integer
-          route: parseInt(route),
+          // Pass route as string or number
+          route: routeValue,
         },
         {
           headers: {
@@ -357,8 +371,12 @@ const OnboardVendor = () => {
             <div className="relative">
               <select
                 name="route"
-                value={route || ""}
-                onChange={(e) => setRoute(e.target.value)}
+                value={route === undefined ? "" : route}
+                onChange={(e) => {
+                  // Accept string or number
+                  const val = e.target.value;
+                  setRoute(val);
+                }}
                 className="w-full border border-gray-300 rounded px-3 py-2 text-gray-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"
                 disabled={loadingRoutes}
               >

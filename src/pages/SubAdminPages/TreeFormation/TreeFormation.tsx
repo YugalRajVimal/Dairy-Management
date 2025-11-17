@@ -10,6 +10,7 @@ import {
 } from "../../../components/ui/table";
 import { UserCircleIcon, ChevronDownIcon, ChevronUpIcon } from "../../../icons";
 
+// route can be a string or number
 interface Vendor {
   _id: string;
   name: string;
@@ -25,6 +26,7 @@ interface Vendor {
   route: string | number;
 }
 
+// supervisorRoutes can be string[] or number[] or (string|number)[]
 interface Supervisor {
   _id: string;
   name: string;
@@ -37,13 +39,13 @@ interface Supervisor {
     state: string;
     pincode: string;
   };
-  supervisorRoutes: number[]; // route is now array of numbers
+  supervisorRoutes: (string | number)[];
 }
 
 const TreeFormation = () => {
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [supervisors, setSupervisors] = useState<Supervisor[]>([]);
-  const [expandedRoutes, setExpandedRoutes] = useState<(number | string)[]>([]);
+  const [expandedRoutes, setExpandedRoutes] = useState<(string | number)[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<string>("");
@@ -77,10 +79,13 @@ const TreeFormation = () => {
     fetchData();
   }, []);
 
-
-
   // --- Filter logic ---
   const filterText = filter.trim().toLowerCase();
+
+  const compareRouteValues = (a: string | number, b: string | number) => {
+    // Compare as strings, i.e., 1 == "1"
+    return String(a) === String(b);
+  };
 
   const filteredSupervisors = filterText
     ? supervisors.filter((supervisor) => {
@@ -101,8 +106,8 @@ const TreeFormation = () => {
           relatedVendors = vendors.filter(
             (v) =>
               typeof v.route !== "undefined" &&
-              supervisor.supervisorRoutes.includes(
-                typeof v.route === "string" ? Number(v.route) : v.route
+              supervisor.supervisorRoutes.some(
+                (sr) => compareRouteValues(sr, v.route)
               )
           );
         }
@@ -193,8 +198,8 @@ const TreeFormation = () => {
                 relatedVendors = vendors.filter(
                   (v) =>
                     typeof v.route !== "undefined" &&
-                    supervisor.supervisorRoutes.includes(
-                      typeof v.route === "string" ? Number(v.route) : v.route
+                    supervisor.supervisorRoutes.some(
+                      (sr) => compareRouteValues(sr, v.route)
                     )
                 );
               }
@@ -222,8 +227,8 @@ const TreeFormation = () => {
                   relatedVendors = vendors.filter(
                     (v) =>
                       typeof v.route !== "undefined" &&
-                      supervisor.supervisorRoutes.includes(
-                        typeof v.route === "string" ? Number(v.route) : v.route
+                      supervisor.supervisorRoutes.some(
+                        (sr) => compareRouteValues(sr, v.route)
                       )
                   );
                 }
@@ -258,7 +263,7 @@ const TreeFormation = () => {
                     <TableCell className="text-center">{supervisor.supervisorId}</TableCell>
                     <TableCell className="text-center">
                       {Array.isArray(supervisor.supervisorRoutes)
-                        ? supervisor.supervisorRoutes.join(", ")
+                        ? supervisor.supervisorRoutes.map((r) => String(r)).join(", ")
                         : ""}
                     </TableCell>
                     <TableCell className="text-center">
@@ -290,7 +295,7 @@ const TreeFormation = () => {
                           <span>{vendor.name} (Vendor)</span>
                         </TableCell>
                         <TableCell className="text-center">{vendor.vendorId}</TableCell>
-                        <TableCell className="text-center">{vendor.route}</TableCell>
+                        <TableCell className="text-center">{String(vendor.route)}</TableCell>
                         <TableCell className="text-center">
                           <a
                             href={`mailto:${vendor.email}`}

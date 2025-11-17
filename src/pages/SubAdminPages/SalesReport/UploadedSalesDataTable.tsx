@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import axios from "axios";
 import {
@@ -20,25 +21,41 @@ interface SalesReport {
   [key: string]: any;
 }
 
+function isDateLike(value: any) {
+  if (!value) return false;
+  const date = new Date(value);
+  return !isNaN(date.getTime());
+}
+
+function formatAnyDate(value: any, withTime = false) {
+  if (!isDateLike(value)) return value;
+
+  const date = new Date(value);
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    ...(withTime && { hour: "2-digit", minute: "2-digit" }),
+  }).format(date);
+}
+
 export default function UploadedSalesDataTable() {
   const API_URL = import.meta.env.VITE_API_URL;
 
   const [reports, setReports] = useState<SalesReport[]>([]);
   const [columns, setColumns] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
+
   const [filter, setFilter] = useState("");
 
-  // Edit Modal
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editData, setEditData] = useState<SalesReport | null>(null);
 
-  // History Modal
-  const [selectedHistory, setSelectedHistory] = useState<History[] | null>(
-    null
-  );
+  const [selectedHistory, setSelectedHistory] = useState<History[] | null>(null);
 
   const hiddenColumns = [
     "_id",
@@ -52,6 +69,7 @@ export default function UploadedSalesDataTable() {
   const fetchReports = async (pageNumber: number) => {
     try {
       setLoading(true);
+
       const res = await axios.get(
         `${API_URL}/api/sub-admin/get-uploaded-sales-report`,
         {
@@ -62,23 +80,27 @@ export default function UploadedSalesDataTable() {
         }
       );
 
-      setReports(res.data.data || []);
+      const list = res.data.data || [];
+
+      setReports(list);
       setColumns(
-        res.data.data.length > 0
-          ? Object.keys(res.data.data[0]).filter(
-              (col) => !hiddenColumns.includes(col)
-            )
+        list.length > 0
+          ? Object.keys(list[0]).filter((col) => !hiddenColumns.includes(col))
           : []
       );
 
       setTotalPages(res.data.totalPages || 1);
       setPage(res.data.currentPage || 1);
-    } catch (err) {
-      console.error("Error fetching sales reports:", err);
+    } catch (error) {
+      console.error("Error fetching sales reports:", error);
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchReports(page);
+  }, [page]);
 
   const openEditModal = (row: SalesReport) => {
     setEditData({ ...row });
@@ -108,124 +130,138 @@ export default function UploadedSalesDataTable() {
 
       setIsEditModalOpen(false);
       fetchReports(page);
-    } catch (err) {
-      console.error("Error updating sales report:", err);
+    } catch (error) {
+      console.error("Error updating sales report:", error);
     }
   };
 
-  const formatDate = (value: string | Date | null, withTime = false) => {
-    if (!value) return "";
-    const date = new Date(value);
-    if (isNaN(date.getTime())) return "";
-    return new Intl.DateTimeFormat("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      ...(withTime && { hour: "2-digit", minute: "2-digit" }),
-    }).format(date);
-  };
-
-  useEffect(() => {
-    fetchReports(page);
-  }, [page]);
-
-  // FILTER
   const filterText = filter.trim().toLowerCase();
   const filteredReports = filterText
     ? reports.filter((row) => {
-        const rowStr = columns
+        const rowString = columns
           .map((col) => {
-            if (col === "uploadedOn") return formatDate(row[col], true);
-            if (col === "docDate") return formatDate(row[col]);
+            if (col === "docDate" || col === "uploadedOn")
+              return formatAnyDate(row[col], true);
+
             return row[col] ? String(row[col]) : "";
           })
           .join(" ")
           .toLowerCase();
-        return rowStr.includes(filterText);
+
+        return rowString.includes(filterText);
       })
     : reports;
 
+  // Loading & Empty states with improved spacing
   if (loading)
     return (
-      <p className="p-4 text-center">Loading...</p>
+      <div className="p-8 flex justify-center items-center min-h-32">
+        <p className="text-center text-gray-500 text-lg">Loading...</p>
+      </div>
     );
+
   if (!filteredReports.length)
     return (
-      <p className="p-4 text-center">No data available</p>
+      <div className="p-8 flex flex-col items-center">
+        <input
+          type="text"
+          className="w-full max-w-md px-5 py-3 border rounded-lg mb-6 shadow
+                     bg-white dark:bg-gray-800 dark:text-gray-200
+                     border-gray-300 dark:border-gray-700
+                     placeholder:text-gray-400 dark:placeholder:text-gray-400"
+          placeholder="Search..."
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+        />
+        <p className="text-gray-500 dark:text-gray-400 mt-6 text-lg">No data available</p>
+      </div>
     );
 
   return (
     <>
-      <div className="overflow-hidden rounded-xl border bg-white">
-        <div className="p-4">
+      <div className="rounded-2xl border bg-white dark:bg-gray-900 shadow-lg mt-8 mx-auto max-w-6xl border-gray-200 dark:border-gray-700">
+        {/* SEARCH */}
+        <div className="p-6 pb-2 flex justify-between items-center flex-wrap gap-2">
           <input
             type="text"
-            className="w-full max-w-md px-4 py-2 border rounded-lg"
+            className="w-full max-w-md px-5 py-3 border rounded-lg shadow
+                       focus:outline-none focus:ring-2 focus:ring-blue-100
+                       bg-white dark:bg-gray-800 dark:text-gray-200
+                       border-gray-300 dark:border-gray-700
+                       placeholder:text-gray-400 dark:placeholder:text-gray-400"
             placeholder="Search..."
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
           />
         </div>
 
-        <div className="overflow-x-auto ">
+        {/* TABLE */}
+        <div className="overflow-x-auto px-2 pt-2 pb-1">
           <Table>
             <TableHeader>
-              <TableRow>
+              <TableRow className="bg-gray-100 dark:bg-gray-800">
                 {columns
-                  .filter((col) => col !== "edited")
-                  .map((col) => (
+                  .filter((c) => c !== "edited")
+                  .map((c) => (
                     <TableCell
-                      key={col}
+                      key={c}
                       isHeader
-                      className="font-medium text-center "
+                      className="font-semibold text-base text-center px-5 py-4 text-gray-700 dark:text-gray-200"
                     >
-                      {col}
+                      {c}
                     </TableCell>
                   ))}
-                <TableCell isHeader className="font-medium text-center">
+
+                <TableCell isHeader className="text-base text-center px-5 py-4 text-gray-700 dark:text-gray-200">
                   Action
                 </TableCell>
 
                 {columns.includes("edited") && (
-                  <TableCell isHeader className="font-medium text-center">
-                    edited
+                  <TableCell isHeader className="text-base text-center px-5 py-4 text-gray-700 dark:text-gray-200">
+                    History
                   </TableCell>
                 )}
               </TableRow>
             </TableHeader>
 
-            <TableBody className="">
+            <TableBody>
               {filteredReports.map((row, idx) => (
-                <TableRow key={idx} className="">
+                <TableRow key={idx} className="even:bg-gray-50 dark:even:bg-gray-800">
                   {columns
-                    .filter((col) => col !== "edited")
+                    .filter((c) => c !== "edited")
                     .map((col) => (
                       <TableCell
                         key={col}
-                        className="text-center align-middle px-4 py-3"
+                        className="text-center align-middle px-5 py-3 text-gray-800 dark:text-gray-100 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800"
                       >
-                        {col === "uploadedOn"
-                          ? formatDate(row[col], true)
-                          : col === "docDate"
-                          ? formatDate(row[col])
+                        {isDateLike(row[col])
+                          ? formatAnyDate(row[col], col === "uploadedOn")
                           : row[col] ?? ""}
                       </TableCell>
                     ))}
 
-                  <TableCell className="text-center align-middle px-4 py-3">
-                    <Button onClick={() => openEditModal(row)}>Edit</Button>
+                  <TableCell className="text-center align-middle px-5 py-3 bg-white dark:bg-gray-900">
+                    <Button
+                      className="px-4 py-2"
+                      onClick={() => openEditModal(row)}
+                    >
+                      Edit
+                    </Button>
                   </TableCell>
 
                   {columns.includes("edited") && (
-                    <TableCell className="text-center align-middle px-4 py-3">
+                    <TableCell className="text-center align-middle px-5 py-3 bg-white dark:bg-gray-900">
                       {row.edited ? (
                         <Button
+                          className="px-4 py-2"
                           onClick={() => setSelectedHistory(row.history || [])}
                         >
-                          Show History
+                          View
                         </Button>
                       ) : (
-                        <p className="text-gray-400 text-center">No History</p>
+                        <span className="text-gray-400 text-sm px-2 py-1">
+                          None
+                        </span>
                       )}
                     </TableCell>
                   )}
@@ -235,16 +271,25 @@ export default function UploadedSalesDataTable() {
           </Table>
         </div>
 
-        <div className="flex justify-between items-center p-4">
-          <Button disabled={page <= 1} onClick={() => setPage(page - 1)}>
+        {/* PAGINATION */}
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-4 p-6 border-t mt-2 border-gray-200 dark:border-gray-700">
+          <Button
+            disabled={page <= 1}
+            onClick={() => setPage(page - 1)}
+            className="px-6 py-2"
+          >
             Previous
           </Button>
-          <p className="text-center flex-1">
-            Page {page} of {totalPages}
+
+          <p className="text-base text-gray-600 dark:text-gray-300 px-6 py-2">
+            Page <span className="font-semibold">{page}</span> of{" "}
+            <span className="font-semibold">{totalPages}</span>
           </p>
+
           <Button
             disabled={page >= totalPages}
             onClick={() => setPage(page + 1)}
+            className="px-6 py-2"
           >
             Next
           </Button>
@@ -255,19 +300,23 @@ export default function UploadedSalesDataTable() {
       <Modal
         isOpen={!!selectedHistory}
         onClose={() => setSelectedHistory(null)}
-        className="p-4"
+        className="p-10 max-w-4xl bg-white dark:bg-gray-900"
       >
-        <h2 className="text-lg font-semibold mb-4 text-center">
+        <h3 className="text-2xl font-semibold mb-6 text-center text-gray-800 dark:text-gray-100">
           Sales Report History
-        </h2>
+        </h3>
 
         {selectedHistory?.length ? (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto px-1">
             <Table>
               <TableHeader>
-                <TableRow>
+                <TableRow className="bg-gray-100 dark:bg-gray-800">
                   {Object.keys(selectedHistory[0]).map((col) => (
-                    <TableCell isHeader key={col} className="text-center">
+                    <TableCell
+                      key={col}
+                      isHeader
+                      className="text-center px-4 py-3 text-base font-semibold text-gray-700 dark:text-gray-200"
+                    >
                       {col}
                     </TableCell>
                   ))}
@@ -275,15 +324,18 @@ export default function UploadedSalesDataTable() {
               </TableHeader>
 
               <TableBody>
-                {selectedHistory.map((entry, i) => (
-                  <TableRow key={i}>
-                    {Object.keys(entry).map((col) => (
-                      <TableCell key={col} className="text-center">
-                        {col === "changedOn"
-                          ? formatDate(entry[col], true)
-                          : typeof entry[col] === "object"
-                          ? JSON.stringify(entry[col])
-                          : entry[col]}
+                {selectedHistory.map((item, i) => (
+                  <TableRow key={i} className="even:bg-gray-50 dark:even:bg-gray-800">
+                    {Object.keys(item).map((col) => (
+                      <TableCell
+                        key={col}
+                        className="text-center px-4 py-3 text-gray-800 dark:text-gray-100 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800"
+                      >
+                        {isDateLike(item[col])
+                          ? formatAnyDate(item[col], true)
+                          : typeof item[col] === "object"
+                          ? JSON.stringify(item[col])
+                          : item[col]}
                       </TableCell>
                     ))}
                   </TableRow>
@@ -292,7 +344,9 @@ export default function UploadedSalesDataTable() {
             </Table>
           </div>
         ) : (
-          <p className="text-center">No history available</p>
+          <p className="text-gray-500 dark:text-gray-400 text-center mt-8 text-lg">
+            No history available.
+          </p>
         )}
       </Modal>
 
@@ -300,19 +354,22 @@ export default function UploadedSalesDataTable() {
       <Modal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
-        className="p-6 max-w-lg"
+        className="p-8 max-w-lg bg-white dark:bg-gray-900"
       >
-        <h2 className="text-xl font-semibold mb-4 text-center">
+        <h3 className="text-2xl font-semibold mb-6 text-center text-gray-800 dark:text-gray-100">
           Edit Sales Report
-        </h2>
+        </h3>
 
         {editData && (
-          <div className="space-y-4">
-            <div className="flex flex-col items-start">
-              <label className="mb-1">Item Code</label>
+          <div className="space-y-6">
+            <div className="flex flex-col gap-2">
+              <label className="font-medium mb-1 text-gray-700 dark:text-gray-200">Item Code</label>
               <input
                 type="text"
-                className="w-full px-3 py-2 border rounded text-center"
+                className="w-full border rounded px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-100
+                           bg-white dark:bg-gray-800 dark:text-gray-200
+                           border-gray-300 dark:border-gray-700
+                           placeholder:text-gray-400 dark:placeholder:text-gray-400"
                 value={editData.itemCode}
                 onChange={(e) =>
                   setEditData({ ...editData, itemCode: e.target.value })
@@ -320,11 +377,14 @@ export default function UploadedSalesDataTable() {
               />
             </div>
 
-            <div className="flex flex-col items-start">
-              <label className="mb-1">Item Name</label>
+            <div className="flex flex-col gap-2">
+              <label className="font-medium mb-1 text-gray-700 dark:text-gray-200">Item Name</label>
               <input
                 type="text"
-                className="w-full px-3 py-2 border rounded text-center"
+                className="w-full border rounded px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-100
+                           bg-white dark:bg-gray-800 dark:text-gray-200
+                           border-gray-300 dark:border-gray-700
+                           placeholder:text-gray-400 dark:placeholder:text-gray-400"
                 value={editData.itemName}
                 onChange={(e) =>
                   setEditData({ ...editData, itemName: e.target.value })
@@ -332,11 +392,14 @@ export default function UploadedSalesDataTable() {
               />
             </div>
 
-            <div className="flex flex-col items-start">
-              <label className="mb-1">Quantity</label>
+            <div className="flex flex-col gap-2">
+              <label className="font-medium mb-1 text-gray-700 dark:text-gray-200">Quantity</label>
               <input
                 type="number"
-                className="w-full px-3 py-2 border rounded text-center"
+                className="w-full border rounded px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-100
+                           bg-white dark:bg-gray-800 dark:text-gray-200
+                           border-gray-300 dark:border-gray-700
+                           placeholder:text-gray-400 dark:placeholder:text-gray-400"
                 value={editData.quantity}
                 onChange={(e) =>
                   setEditData({
@@ -347,27 +410,35 @@ export default function UploadedSalesDataTable() {
               />
             </div>
 
-            <div className="flex flex-col items-start">
-              <label className="mb-1">Document Date</label>
+            <div className="flex flex-col gap-2">
+              <label className="font-medium mb-1 text-gray-700 dark:text-gray-200">Document Date</label>
               <input
                 type="date"
-                className="w-full px-3 py-2 border rounded text-center"
-                value={editData.docDate?.slice(0, 10)}
+                className="w-full border rounded px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-100
+                           bg-white dark:bg-gray-800 dark:text-gray-200
+                           border-gray-300 dark:border-gray-700
+                           placeholder:text-gray-400 dark:placeholder:text-gray-400"
+                value={
+                  isDateLike(editData.docDate)
+                    ? new Date(editData.docDate).toISOString().slice(0, 10)
+                    : editData.docDate
+                }
                 onChange={(e) =>
-                  setEditData({
-                    ...editData,
-                    docDate: e.target.value,
-                  })
+                  setEditData({ ...editData, docDate: e.target.value })
                 }
               />
             </div>
 
-            <div className="flex justify-center">
-              <Button onClick={handleUpdateSalesReport}>Update Report</Button>
-            </div>
+            <Button
+              onClick={handleUpdateSalesReport}
+              className="w-full mt-6 py-3 px-5"
+            >
+              Save Changes
+            </Button>
           </div>
         )}
       </Modal>
     </>
   );
 }
+
