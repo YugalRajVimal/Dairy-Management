@@ -26,11 +26,11 @@ const HomePage = () => {
               Sub Admin Login
             </Button>
           </Link>
-          <Link to="/supervisor">
+          {/* <Link to="/supervisor">
             <Button className="w-full md:w-auto px-6 py-3 text-lg bg-violet-800 hover:bg-violet-900 text-white rounded-xl shadow-lg transition">
               Supervisor Login
             </Button>
-          </Link>
+          </Link> */}
         </div>
       </div>
 
