@@ -24,9 +24,15 @@ interface SalesReport {
 
 function isDateLike(value: any) {
   if (!value) return false;
+
+  // Reject pure numbers or numeric strings
+  if (typeof value === "number") return false;
+  if (typeof value === "string" && /^[0-9]+$/.test(value)) return false;
+
   const date = new Date(value);
   return !isNaN(date.getTime());
 }
+
 
 function formatAnyDate(value: any, withTime = false) {
   if (!isDateLike(value)) return value;
@@ -56,7 +62,7 @@ export default function UploadedSalesDataTable() {
 
   const [selectedHistory, setSelectedHistory] = useState<History[] | null>(null);
 
-  // New: For Delete confirmation
+  // For Delete confirmation
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteRowId, setDeleteRowId] = useState<string | null>(null);
 
@@ -87,6 +93,8 @@ export default function UploadedSalesDataTable() {
       );
 
       const list = res.data.data || [];
+
+      console.log(list);
 
       setReports(list);
       setColumns(
@@ -153,10 +161,9 @@ export default function UploadedSalesDataTable() {
   };
 
   // Reset page when searchText changes
-useEffect(() => {
-  setPage(1);
-}, [searchText]);
-
+  useEffect(() => {
+    setPage(1);
+  }, [searchText]);
 
   // Delete logic
   const handleDeleteSalesReport = async () => {
@@ -172,15 +179,11 @@ useEffect(() => {
       );
       setIsDeleteModalOpen(false);
       setDeleteRowId(null);
-      // If we're on the last page and delete the last item, ensure we don't end up on an empty page
-      // Refetch accordingly
       fetchReports(page, searchText || "");
     } catch (error) {
       console.error("Error deleting sales report:", error);
     }
   };
-
-
 
   if (loading)
     return (
@@ -244,9 +247,32 @@ useEffect(() => {
                         key={col}
                         className="text-center align-middle px-5 py-3 text-gray-800 dark:text-gray-100 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800"
                       >
-                        {isDateLike(row[col])
-                          ? formatAnyDate(row[col], col === "uploadedOn")
-                          : row[col] ?? ""}
+                        {(() => {
+                          const value = row[col];
+                          if (isDateLike(value)) {
+                            // Format as date for date-like columns
+                            return formatAnyDate(value, col === "uploadedOn");
+                          }
+                          // If all digits, render as number (or keep as string if leading zeros)
+                          if (
+                            typeof value === "string" &&
+                            value.trim() !== "" &&
+                            /^[0-9]+$/.test(value)
+                          ) {
+                            // Show as number (but avoid losing leading zeros if code)
+                            // Columns with 'code' in name = text (to preserve leading 0s)
+                            if (col.toLowerCase().includes("code")) {
+                              return value;
+                            }
+                            return Number(value);
+                          }
+                          // If a number and not date, show as is
+                          if (typeof value === "number") {
+                            return value;
+                          }
+                          // Otherwise (text), return as string
+                          return value ?? "";
+                        })()}
                       </TableCell>
                     ))}
 
@@ -259,7 +285,6 @@ useEffect(() => {
                     </Button>
                     <Button
                       className="!px-3 !py-1 !bg-red-600 hover:!bg-red-700 text-white"
-
                       onClick={() => openDeleteModal(row._id)}
                     >
                       Delete
@@ -270,8 +295,14 @@ useEffect(() => {
                     <TableCell className="text-center align-middle px-5 py-3 bg-white dark:bg-gray-900">
                       {row.edited ? (
                         <Button
-                        className="!px-3 !py-1"
-                          onClick={() => setSelectedHistory(row.history || [])}
+                          className="!px-3 !py-1"
+                          onClick={() =>
+                            setSelectedHistory(
+                              Array.isArray(row.history) && row.history.length > 0
+                                ? row.history
+                                : []
+                            )
+                          }
                         >
                           View
                         </Button>
@@ -323,7 +354,7 @@ useEffect(() => {
           Sales Report History
         </h3>
 
-        {selectedHistory?.length ? (
+        {selectedHistory && selectedHistory.length > 0 ? (
           <div className="overflow-x-auto px-1">
             <Table>
               <TableHeader>
@@ -350,7 +381,7 @@ useEffect(() => {
                       >
                         {isDateLike(item[col])
                           ? formatAnyDate(item[col], true)
-                          : typeof item[col] === "object"
+                          : typeof item[col] === "object" && item[col] !== null
                           ? JSON.stringify(item[col])
                           : item[col]}
                       </TableCell>

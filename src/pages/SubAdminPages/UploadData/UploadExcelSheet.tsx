@@ -240,7 +240,7 @@ export default function UploadExcelSheet() {
           </Button>
         </div>
       </ComponentCard>
-      
+      <div className="w-full my-4 text-center">----- OR -----</div>
       {/* Manual Entry Section */}
       <ComponentCard title="Record Entry">
         <div className="flex gap-4 flex-col">

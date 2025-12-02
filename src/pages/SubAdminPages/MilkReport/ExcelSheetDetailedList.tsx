@@ -1,5 +1,5 @@
 
-import {  useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import {
   Table,
@@ -48,6 +48,17 @@ function formatAnyDate(val: any, withTime = false) {
 // ---- NEW: "Delete" modal state ----
 type DeleteState = { open: boolean; report: MilkReport | null; loading: boolean; err: string };
 
+// ---- NEW: Bulk Delete Modal state
+type BulkDeleteState = {
+  open: boolean;
+  date: string; // "YYYY-MM-DD"
+  shift: "" | "Morning" | "Evening";
+  error: string;
+  confirm: boolean;
+  loading: boolean;
+  success: string;
+};
+
 export default function SubAdminExcelDataTable() {
   const API_URL = import.meta.env.VITE_API_URL;
   const [reports, setReports] = useState<MilkReport[]>([]);
@@ -67,6 +78,17 @@ export default function SubAdminExcelDataTable() {
     err: "",
   });
 
+  // NEW: Bulk Delete state
+  const [bulkDelete, setBulkDelete] = useState<BulkDeleteState>({
+    open: false,
+    date: "",
+    shift: "",
+    error: "",
+    confirm: false,
+    loading: false,
+    success: "",
+  });
+
   // Use searchText/setSearchText from SidebarContext
   const { searchText, setSearchText } = useSidebar();
 
@@ -77,6 +99,87 @@ export default function SubAdminExcelDataTable() {
 
   const openDeleteModal = (report: MilkReport) => {
     setDeleteState({ open: true, report, loading: false, err: "" });
+  };
+
+  // Bulk delete modal handlers
+  const openBulkDeleteModal = () => {
+    setBulkDelete({
+      open: true,
+      date: "",
+      shift: "",
+      error: "",
+      confirm: false,
+      loading: false,
+      success: "",
+    });
+  };
+
+  const closeBulkDeleteModal = () => {
+    setBulkDelete({
+      open: false,
+      date: "",
+      shift: "",
+      error: "",
+      confirm: false,
+      loading: false,
+      success: "",
+    });
+  };
+
+  const handleBulkDeleteSubmit = () => {
+    // validation
+    if (!bulkDelete.date) {
+      setBulkDelete((prev) => ({ ...prev, error: "Please select a date." }));
+      return;
+    }
+    if (!bulkDelete.shift) {
+      setBulkDelete((prev) => ({ ...prev, error: "Please select a shift." }));
+      return;
+    }
+    setBulkDelete((prev) => ({ ...prev, error: "", confirm: true }));
+  };
+
+  const handleConfirmBulkDelete = async () => {
+    setBulkDelete((prev) => ({ ...prev, loading: true, error: "", success: "" }));
+    try {
+      // Updated endpoint - call sales report bulk delete route (POST)
+      // /api/sub-admin/bulk-delete-sales-reports (body: { date: ..., shift: ... })
+      await axios.post(
+        `${API_URL}/api/sub-admin/bulk-delete-milk-reports`,
+        {
+          date: bulkDelete.date,
+          shift: bulkDelete.shift,
+        },
+        {
+          headers: {
+            Authorization: localStorage.getItem("sub-admin-token") ?? undefined,
+          },
+        }
+      );
+      // If success:
+      setBulkDelete((prev) => ({
+        ...prev,
+        loading: false,
+        confirm: false,
+        success: "Bulk delete successful!",
+      }));
+      // Refresh table:
+      fetchReports(page, searchText);
+      setTimeout(() => {
+        closeBulkDeleteModal();
+      }, 1200);
+    } catch (err: any) {
+      let msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Error in bulk delete";
+      setBulkDelete((prev) => ({
+        ...prev,
+        loading: false,
+        confirm: false,
+        error: msg,
+      }));
+    }
   };
 
   const handleDeleteReport = async () => {
@@ -157,7 +260,7 @@ export default function SubAdminExcelDataTable() {
       const res = await axios.get(
         `${API_URL}/api/sub-admin/get-uploaded-milk-report`,
         {
-          params: { 
+          params: {
             page: pageNumber,
             limit,
             search: searchText,
@@ -201,8 +304,7 @@ export default function SubAdminExcelDataTable() {
   }, [page]);
 
   useEffect(() => {
-
-console.log(searchText);
+    // console.log(searchText);
   }, [searchText]);
 
   // Debounced fetch on searchText change (always reset to page 1)
@@ -210,7 +312,7 @@ console.log(searchText);
     const delay = setTimeout(() => {
       fetchReports(1, searchText);
       setPage(1);
-    }, 400); // 400ms debounce
+    }, 400);
 
     return () => clearTimeout(delay);
     // eslint-disable-next-line
@@ -220,18 +322,18 @@ console.log(searchText);
   const filterText = searchText.trim().toLowerCase();
   const filteredReports = filterText
     ? reports.filter((row) => {
-        const rowStr = columns
-          .map((col) => {
-            // For search, attempt to format as date if value is date-like, else as string
-            if (col === "uploadedOn") return formatDate(row[col], true);
-            if (col === "docDate") return formatDate(row[col]);
-            if (isDateLike(row[col])) return formatAnyDate(row[col], true);
-            return row[col] ? String(row[col]) : "";
-          })
-          .join(" ")
-          .toLowerCase();
-        return rowStr.includes(filterText);
-      })
+      const rowStr = columns
+        .map((col) => {
+          // For search, attempt to format as date if value is date-like, else as string
+          if (col === "uploadedOn") return formatDate(row[col], true);
+          if (col === "docDate") return formatDate(row[col]);
+          if (isDateLike(row[col])) return formatAnyDate(row[col], true);
+          return row[col] ? String(row[col]) : "";
+        })
+        .join(" ")
+        .toLowerCase();
+      return rowStr.includes(filterText);
+    })
     : reports;
 
   if (loading) return <p className="p-4 text-gray-500">Loading reports...</p>;
@@ -241,9 +343,7 @@ console.log(searchText);
         <input
           type="text"
           placeholder="Search..."
-          // value={searchText}
           value={searchText ?? ""}
-
           onChange={e => setSearchText(e.target.value)}
           className="..."
         />
@@ -255,15 +355,27 @@ console.log(searchText);
   return (
     <div className="w-full space-y-6">
       {/* PAGE HEADER */}
-      <div className="flex flex-col gap-1 px-1">
-        <h1 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
-          Milk Report Records
-        </h1>
-        <p className="text-gray-500 dark:text-gray-400 text-sm">
-          View, filter, edit & track history of uploaded milk reports.
-        </p>
-      </div>
+      <div className="flex justify-between gap-1 px-1">
+        <div className="flex flex-col gap-1 px-1">
+          <h1 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
+            Milk Report Records
+          </h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">
+            View, filter, edit & track history of uploaded milk reports.
+          </p>
+        </div>
 
+        <div>
+          <div className="flex items-center px-5 py-4 gap-4 bg-gray-50 dark:bg-gray-800">
+            <Button
+              className="px-4 py-2 bg-red-700"
+              onClick={openBulkDeleteModal}
+            >
+              Bulk Delete
+            </Button>
+          </div>
+        </div>
+      </div>
 
       {/* TABLE CARD */}
       <div className="overflow-hidden rounded-xl border bg-white dark:bg-gray-900 shadow">
@@ -381,6 +493,132 @@ console.log(searchText);
         </div>
       </div>
 
+      {/* ------------------- BULK DELETE MODAL ------------------- */}
+      <Modal
+        isOpen={bulkDelete.open}
+        onClose={closeBulkDeleteModal}
+        className="p-6 max-w-lg bg-white dark:bg-gray-100 rounded-xl shadow-lg"
+      >
+        <h2 className="text-xl font-semibold mb-4 text-red-700">Bulk Delete Milk Reports</h2>
+        {/* If we've already succeeded, show a success message only */}
+        {bulkDelete.success ? (
+          <div className="mb-4 text-green-600 text-center">
+            {bulkDelete.success}
+          </div>
+        ) : (
+          <>
+            {!bulkDelete.confirm && (
+              <>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block font-medium mb-1 text-sm">
+                      Select Date
+                    </label>
+                    <input
+                      type="date"
+                      className="w-full px-3 py-2 border rounded-lg"
+                      value={bulkDelete.date}
+                      onChange={e =>
+                        setBulkDelete((prev) => ({
+                          ...prev,
+                          date: e.target.value,
+                          error: "",
+                        }))
+                      }
+                      max={new Date().toISOString().slice(0, 10)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-medium mb-1 text-sm">
+                      Select Shift
+                    </label>
+                    <select
+                      className="w-full px-3 py-2 border rounded-lg"
+                      value={bulkDelete.shift}
+                      onChange={e =>
+                        setBulkDelete((prev) => ({
+                          ...prev,
+                          shift: e.target.value as BulkDeleteState["shift"],
+                          error: "",
+                        }))
+                      }
+                    >
+                      <option value="">-- Select --</option>
+                      <option value="Morning">Morning</option>
+                      <option value="Evening">Evening</option>
+                    </select>
+                  </div>
+                </div>
+                {bulkDelete.error && (
+                  <div className="mt-3 text-red-500 text-sm">{bulkDelete.error}</div>
+                )}
+
+                <div className="flex items-center justify-end gap-2 mt-5">
+                  <Button
+                    onClick={closeBulkDeleteModal}
+                    className="!bg-gray-200 !text-gray-700 hover:!bg-gray-300"
+                    disabled={bulkDelete.loading}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleBulkDeleteSubmit}
+                    className="!bg-red-600 !text-white hover:!bg-red-700"
+                    disabled={bulkDelete.loading}
+                  >
+                    Delete
+                  </Button>
+                </div>
+              </>
+            )}
+
+            {/* Confirm step */}
+            {bulkDelete.confirm && (
+              <>
+                <div className="flex flex-col items-center mb-6 mt-1">
+                  <p className="mb-2 text-base text-red-600">
+                    Are you sure you want to <b>bulk delete</b> all milk reports for:
+                  </p>
+                  <div className="mb-3 text-black bg-gray-50 rounded border px-3 py-2 text-xs">
+                    <div>
+                      <b>Date:</b>{" "}
+                      {bulkDelete.date
+                        ? formatAnyDate(bulkDelete.date)
+                        : ""}
+                    </div>
+                    <div>
+                      <b>Shift:</b> {bulkDelete.shift}
+                    </div>
+                  </div>
+                  <p className="text-red-500 text-xs">
+                    This will delete all records matching date and shift. This action is <b>irrevocable</b>.
+                  </p>
+                </div>
+                {bulkDelete.error && (
+                  <div className="mb-3 text-red-500 text-sm">{bulkDelete.error}</div>
+                )}
+                <div className="flex items-center justify-end gap-2 mt-2">
+                  <Button
+                    onClick={closeBulkDeleteModal}
+                    className="!bg-gray-200 !text-gray-700 hover:!bg-gray-300"
+                    disabled={bulkDelete.loading}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleConfirmBulkDelete}
+                    className="!bg-red-600 !text-white hover:!bg-red-700"
+                    disabled={bulkDelete.loading}
+                  >
+                    {bulkDelete.loading ? "Deleting..." : "Yes, Bulk Delete"}
+                  </Button>
+                </div>
+              </>
+            )}
+          </>
+        )}
+      </Modal>
+
       {/* ------------------- HISTORY MODAL ------------------- */}
       <Modal
         isOpen={!!selectedHistory}
@@ -416,8 +654,8 @@ console.log(searchText);
                           (col.toLowerCase().includes("date") || col.toLowerCase().includes("time") || isDateLike(h[col]))
                             ? formatAnyDate(h[col], col === "changedOn" || col.toLowerCase().includes("time"))
                             : typeof h[col] === "object"
-                            ? JSON.stringify(h[col])
-                            : String(h[col] ?? "")
+                              ? JSON.stringify(h[col])
+                              : String(h[col] ?? "")
                         }
                       </TableCell>
                     ))}
@@ -467,7 +705,6 @@ console.log(searchText);
             <Button
               onClick={handleDeleteReport}
               className="!bg-red-600 !text-white hover:!bg-red-700"
-              // loading={deleteState.loading}
             >
               Yes, Delete
             </Button>
