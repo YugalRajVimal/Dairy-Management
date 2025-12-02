@@ -61,7 +61,7 @@ export default function UploadedSalesDataTable() {
   const [deleteRowId, setDeleteRowId] = useState<string | null>(null);
 
   // Use searchText/setSearchText from SidebarContext
-  const { searchText, setSearchText } = useSidebar();
+  const { searchText } = useSidebar();
 
   const hiddenColumns = [
     "_id",
