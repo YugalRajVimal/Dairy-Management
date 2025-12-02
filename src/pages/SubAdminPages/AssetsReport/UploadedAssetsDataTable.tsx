@@ -28,6 +28,12 @@ interface MilkReport {
   [key: string]: any;
 }
 
+// Safe Object.values - returns [] for null or undefined, otherwise Object.values(val)
+function safeObjectValues(val: any): any[] {
+  if (val == null || typeof val !== "object" || Array.isArray(val)) return [];
+  return Object.values(val);
+}
+
 export default function UploadedAssetsDataTable() {
   const API_URL = import.meta.env.VITE_API_URL;
   const [reports, setReports] = useState<MilkReport[]>([]);
@@ -105,8 +111,8 @@ export default function UploadedAssetsDataTable() {
               .toLowerCase()
               .includes(filter.trim().toLowerCase());
           }
-          if (typeof val === "object") {
-            return Object.values(val)
+          if (typeof val === "object" && val !== null && !Array.isArray(val)) {
+            return safeObjectValues(val)
               .join(", ")
               .toLowerCase()
               .includes(filter.trim().toLowerCase());
@@ -180,10 +186,10 @@ export default function UploadedAssetsDataTable() {
                           formatDate(row[col])
                         ) : Array.isArray(row[col]) && col === "history" ? (
                           <Button onClick={() => setSelectedHistory(row[col])}>
-                            View History ({row[col].length})
+                            View History ({row[col] ? row[col].length : 0})
                           </Button>
-                        ) : typeof row[col] === "object" ? (
-                          Object.values(row[col]).join(", ")
+                        ) : typeof row[col] === "object" && row[col] !== null && !Array.isArray(row[col]) ? (
+                          safeObjectValues(row[col]).join(", ")
                         ) : (
                           row[col] ?? ""
                         )}
@@ -228,15 +234,17 @@ export default function UploadedAssetsDataTable() {
               {/* Table Header */}
               <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
                 <TableRow>
-                  {Object.keys(selectedHistory[0]).map((col) => (
-                    <TableCell
-                      key={col}
-                      isHeader
-                      className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-                    >
-                      {col}
-                    </TableCell>
-                  ))}
+                  {selectedHistory[0] && typeof selectedHistory[0] === "object"
+                    ? Object.keys(selectedHistory[0]).map((col) => (
+                        <TableCell
+                          key={col}
+                          isHeader
+                          className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
+                        >
+                          {col}
+                        </TableCell>
+                      ))
+                    : null}
                 </TableRow>
               </TableHeader>
 
@@ -244,18 +252,20 @@ export default function UploadedAssetsDataTable() {
               <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
                 {selectedHistory.map((h, idx) => (
                   <TableRow key={idx}>
-                    {Object.keys(h).map((col) => (
-                      <TableCell
-                        key={col}
-                        className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400"
-                      >
-                        {col === "changedOn"
-                          ? formatDate(h[col], true)
-                          : typeof h[col] === "object"
-                          ? JSON.stringify(h[col])
-                          : String(h[col] ?? "")}
-                      </TableCell>
-                    ))}
+                    {h && typeof h === "object"
+                      ? Object.keys(h).map((col) => (
+                          <TableCell
+                            key={col}
+                            className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400"
+                          >
+                            {col === "changedOn"
+                              ? formatDate(h[col], true)
+                              : typeof h[col] === "object" && h[col] !== null
+                              ? JSON.stringify(h[col])
+                              : String(h[col] ?? "")}
+                          </TableCell>
+                        ))
+                      : null}
                   </TableRow>
                 ))}
               </TableBody>

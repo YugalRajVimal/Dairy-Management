@@ -98,6 +98,7 @@ interface Vendor {
     pincode: string;
   };
   route: string;
+  disabled?: boolean; // Added for enabled/disabled status
 }
 
 function EditVendorModal({
@@ -278,12 +279,15 @@ export default function VendorsList() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingVendor, setEditingVendor] = useState<Vendor | null>(null);
   const [saving, setSaving] = useState(false);
+
   // Toast
   const [toast, setToast] = useState<{ message: string; type?: "success" | "error" } | null>(null);
 
   // Filter
   const [filter, setFilter] = useState<string>("");
   const [refreshFlag, setRefreshFlag] = useState(0);
+
+  const [enableDisableLoading, setEnableDisableLoading] = useState<string | null>(null); // vendorId for loading toggle
 
   useEffect(() => {
     const fetchVendors = async () => {
@@ -367,6 +371,38 @@ export default function VendorsList() {
       );
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Enable/disable vendor functionality
+  const handleToggleEnableVendor = async (vendorId: string, disabled: boolean) => {
+    setEnableDisableLoading(vendorId);
+    setError(null);
+    try {
+      const token = localStorage.getItem("sub-admin-token");
+      // Endpoint and payload according to backend (toggle status)
+      await axios.patch(
+        `${import.meta.env.VITE_API_URL}/api/sub-admin/enable-disable-vendor/${vendorId}`,
+        { disabled: !disabled },
+        {
+          headers: {
+            Authorization: `${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      setRefreshFlag((v) => v + 1);
+      setToast({
+        message: `Vendor ${!disabled ? "enabled" : "disabled"} successfully!`,
+        type: "success",
+      });
+    } catch (err: any) {
+      setError(
+        err?.response?.data?.message ||
+          `Failed to ${disabled ? "disable" : "enable"} vendor. Please try again.`
+      );
+    } finally {
+      setEnableDisableLoading(null);
     }
   };
 
@@ -460,6 +496,12 @@ export default function VendorsList() {
                 isHeader
                 className="px-5 py-3 text-start text-gray-500"
               >
+                Status
+              </TableCell>
+              <TableCell
+                isHeader
+                className="px-5 py-3 text-start text-gray-500"
+              >
                 Action
               </TableCell>
             </TableRow>
@@ -467,7 +509,14 @@ export default function VendorsList() {
           {/* Table Body */}
           <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
             {filteredVendors.map((vendor) => (
-              <TableRow key={vendor._id}>
+              <TableRow
+                key={vendor._id}
+                className={
+                  vendor.disabled === false
+                    ? "bg-gray-100 dark:bg-gray-900/50"
+                    : ""
+                }
+              >
                 <TableCell className="px-5 py-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 flex justify-center items-center rounded-full">
@@ -511,13 +560,53 @@ export default function VendorsList() {
                 <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
                   {vendor.address?.pincode}
                 </TableCell>
-                <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
+                <TableCell className="px-4 py-3 font-semibold text-xs">
+                  {vendor.disabled
+                    ? (
+                        <span className="inline-block px-2 py-1 rounded bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300">
+                          Disabled
+                       
+                        </span>
+                      )
+                    : (
+                        <span className="
+                        inline-block px-2 py-1 rounded bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300
+                        ">
+                          Enabled
+
+                        </span>
+                      )
+                  }
+                </TableCell>
+                <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400 flex flex-col gap-2">
                   <button
                     className="inline-flex items-center gap-1 px-3 py-[6px] rounded-lg bg-brand-50 hover:bg-brand-100 dark:bg-brand-400/10 dark:hover:bg-brand-400/15 text-brand-600 text-sm font-medium transition"
                     onClick={() => handleOpenEdit(vendor)}
                   >
                     <PencilIcon width={16} height={16} />
                     Edit
+                  </button>
+                  <button
+                    className={`inline-flex items-center gap-1 px-3 py-[6px] rounded-lg text-sm font-medium transition ${
+                      vendor.disabled
+                        ? "bg-green-50 hover:bg-green-100 text-green-700 dark:bg-green-400/10 dark:hover:bg-green-400/20"
+                        : "bg-red-50 hover:bg-red-100 text-red-700 dark:bg-red-400/10 dark:hover:bg-red-400/20"
+                    }`}
+                    onClick={() => handleToggleEnableVendor(vendor._id, Boolean(vendor.disabled))}
+                    disabled={enableDisableLoading === vendor._id}
+                  >
+                    {enableDisableLoading === vendor._id
+                      ? (
+                        <svg className="animate-spin mr-1" width={16} height={16} viewBox="0 0 16 16" fill="none">
+                          <circle cx="8" cy="8" r="7" stroke="currentColor" strokeOpacity="0.2" strokeWidth="2" />
+                          <path d="M15 8A7 7 0 008 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                        </svg>
+                      )
+                      : (
+                        vendor.disabled
+                          ? <span>Enable</span>
+                          : <span>Disable</span>
+                      )}
                   </button>
                 </TableCell>
               </TableRow>

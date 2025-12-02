@@ -1,175 +1,5 @@
-// import { useEffect, useState } from "react";
-// import axios from "axios";
-// import {
-//   Table,
-//   TableBody,
-//   TableCell,
-//   TableHeader,
-//   TableRow,
-// } from "../../../components/ui/table";
-// import Button from "../../../components/ui/button/Button";
 
-// interface MilkReport {
-//   [key: string]: any; // Dynamic keys from uploaded Excel
-// }
-
-// export default function SubAdminExcelDataTable() {
-//   const API_URL = import.meta.env.VITE_API_URL;
-//   const [reports, setReports] = useState<MilkReport[]>([]);
-//   const [columns, setColumns] = useState<string[]>([]);
-//   const [loading, setLoading] = useState(false);
-//   const [page, setPage] = useState(1);
-//   const [limit] = useState(10);
-//   const [totalPages, setTotalPages] = useState(1);
-//   const [filter, setFilter] = useState<string>(""); // Added filter state
-
-//   const hiddenColumns = ["_id", "__v", "createdAt", "updatedAt", "uploadedBy"];
-
-//   const fetchReports = async (pageNumber: number) => {
-//     try {
-//       setLoading(true);
-//       const res = await axios.get(
-//         `${API_URL}/api/sub-admin/get-uploaded-milk-report`,
-//         {
-//           params: { page: pageNumber, limit },
-//           headers: { Authorization: localStorage.getItem("sub-admin-token") },
-//         }
-//       );
-
-//       setReports(res.data.data || []);
-//       setColumns(
-//         res.data.data.length > 0
-//           ? Object.keys(res.data.data[0]).filter(
-//               (col) => !hiddenColumns.includes(col)
-//             )
-//           : []
-//       );
-//       setTotalPages(res.data.totalPages || 1);
-//       setPage(res.data.currentPage || 1);
-//     } catch (err) {
-//       console.error("Error fetching milk reports:", err);
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   const formatDate = (value: string | Date | null, withTime = false) => {
-//     if (!value) return "";
-//     const date = new Date(value);
-//     if (isNaN(date.getTime())) return "";
-//     return new Intl.DateTimeFormat("en-GB", {
-//       day: "2-digit",
-//       month: "short",
-//       year: "numeric",
-//       ...(withTime && { hour: "2-digit", minute: "2-digit" }),
-//     }).format(date);
-//   };
-
-//   useEffect(() => {
-//     fetchReports(page);
-//   }, [page]);
-
-//   // Filtering logic: filter by the whole row (all column values as a string, case-insensitive)
-//   const filterText = filter.trim().toLowerCase();
-
-//   const filteredReports = filterText
-//     ? reports.filter((row) => {
-//         const rowStr = columns
-//           .map((col) => {
-//             if (col === "uploadedOn")
-//               return formatDate(row[col], true);
-//             if (col === "docDate")
-//               return formatDate(row[col]);
-//             return row[col] !== undefined && row[col] !== null ? String(row[col]) : "";
-//           })
-//           .join(" ")
-//           .toLowerCase();
-//         return rowStr.includes(filterText);
-//       })
-//     : reports;
-
-//   if (loading) {
-//     return <p className="p-4 text-gray-500">Loading reports...</p>;
-//   }
-
-//   if (!filteredReports || filteredReports.length === 0) {
-//     return <p className="p-4 text-gray-500">No data available</p>;
-//   }
-
-//   return (
-//     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/[0.05] dark:bg-white/[0.03]">
-//       <div className="max-w-full overflow-x-auto">
-//         {/* Filter input */}
-//         <div className="p-4">
-//           <input
-//             type="text"
-//             className="w-full max-w-md px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-500 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700"
-//             placeholder="Search in all columns..."
-//             value={filter}
-//             onChange={(e) => setFilter(e.target.value)}
-//           />
-//         </div>
-//         <Table>
-//           {/* Table Header */}
-//           <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
-//             <TableRow>
-//               {columns.map((col) => (
-//                 <TableCell
-//                   key={col}
-//                   isHeader
-//                   className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
-//                 >
-//                   {col.trim()}
-//                 </TableCell>
-//               ))}
-//             </TableRow>
-//           </TableHeader>
-
-//           {/* Table Body */}
-//           <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
-//             {filteredReports.map((row, rowIndex) => (
-//               <TableRow key={rowIndex}>
-//                 {columns.map((col) => (
-//                   <TableCell
-//                     key={col}
-//                     className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400"
-//                   >
-//                     {col === "uploadedOn"
-//                       ? formatDate(row[col]) // show with time
-//                       : col === "docDate"
-//                       ? formatDate(row[col]) // show only date
-//                       : row[col] ?? ""}
-//                   </TableCell>
-//                 ))}
-//               </TableRow>
-//             ))}
-//           </TableBody>
-//         </Table>
-//       </div>
-
-//       {/* Pagination */}
-//       <div className="flex justify-between items-center p-4">
-//         <Button
-//           disabled={page <= 1}
-//           onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-//         >
-//           Previous
-//         </Button>
-//         <p className="text-gray-500">
-//           Page {page} of {totalPages}
-//         </p>
-//         <Button
-//           disabled={page >= totalPages}
-//           onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
-//         >
-//           Next
-//         </Button>
-//       </div>
-//     </div>
-//   );
-// }
-
-import { useEffect, useState } from "react";
+import {  useEffect, useState } from "react";
 import axios from "axios";
 import {
   Table,
@@ -180,6 +10,7 @@ import {
 } from "../../../components/ui/table";
 import Button from "../../../components/ui/button/Button";
 import { Modal } from "../../../components/ui/modal";
+import { useSidebar } from "../../../context/SidebarContext";
 
 interface History {
   [key: string]: any;
@@ -214,6 +45,9 @@ function formatAnyDate(val: any, withTime = false) {
   return val;
 }
 
+// ---- NEW: "Delete" modal state ----
+type DeleteState = { open: boolean; report: MilkReport | null; loading: boolean; err: string };
+
 export default function SubAdminExcelDataTable() {
   const API_URL = import.meta.env.VITE_API_URL;
   const [reports, setReports] = useState<MilkReport[]>([]);
@@ -222,14 +56,53 @@ export default function SubAdminExcelDataTable() {
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
-  const [filter, setFilter] = useState<string>("");
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editData, setEditData] = useState<MilkReport | null>(null);
 
+  const [deleteState, setDeleteState] = useState<DeleteState>({
+    open: false,
+    report: null,
+    loading: false,
+    err: "",
+  });
+
+  // Use searchText/setSearchText from SidebarContext
+  const { searchText, setSearchText } = useSidebar();
+
   const openEditModal = (report: MilkReport) => {
     setEditData({ ...report });
     setIsEditModalOpen(true);
+  };
+
+  const openDeleteModal = (report: MilkReport) => {
+    setDeleteState({ open: true, report, loading: false, err: "" });
+  };
+
+  const handleDeleteReport = async () => {
+    if (!deleteState.report || !deleteState.report._id) return;
+    setDeleteState((prev) => ({ ...prev, loading: true, err: "" }));
+    try {
+      await axios.delete(
+        `${API_URL}/api/sub-admin/delete-milk-report/${deleteState.report._id}`,
+        {
+          headers: {
+            // Fix: getItem can return string | null. Force to undefined if null
+            Authorization: localStorage.getItem("sub-admin-token") ?? undefined,
+          },
+        }
+      );
+      // After delete, close modal, refresh
+      setDeleteState({ open: false, report: null, loading: false, err: "" });
+      fetchReports(page, searchText);
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Error deleting milk report";
+      setDeleteState((prev) => ({ ...prev, loading: false, err: msg }));
+      // Optionally show error in modal
+    }
   };
 
   const handleUpdateReport = async () => {
@@ -251,13 +124,14 @@ export default function SubAdminExcelDataTable() {
         body,
         {
           headers: {
-            Authorization: localStorage.getItem("sub-admin-token"),
+            // Fix: getItem can return string | null. Force to undefined if null
+            Authorization: localStorage.getItem("sub-admin-token") ?? undefined,
           },
         }
       );
 
       setIsEditModalOpen(false);
-      fetchReports(page); // refresh table
+      fetchReports(page, searchText); // refresh table
     } catch (err) {
       console.error("Error updating milk report:", err);
     }
@@ -277,27 +151,30 @@ export default function SubAdminExcelDataTable() {
     "history",
   ];
 
-  const fetchReports = async (pageNumber: number) => {
+  const fetchReports = async (pageNumber: number, searchText = "") => {
     try {
       setLoading(true);
       const res = await axios.get(
         `${API_URL}/api/sub-admin/get-uploaded-milk-report`,
         {
-          params: { page: pageNumber, limit },
-          headers: { Authorization: localStorage.getItem("sub-admin-token") },
+          params: { 
+            page: pageNumber,
+            limit,
+            search: searchText,
+          },
+          headers: { Authorization: localStorage.getItem("sub-admin-token") ?? undefined },
         }
       );
 
       setReports(res.data.data || []);
       setColumns(
         res.data.data.length > 0
-          ? Object.keys(res.data.data[0]).filter(
-              (col) => !hiddenColumns.includes(col)
-            )
+          ? Object.keys(res.data.data[0]).filter((col) => !hiddenColumns.includes(col))
           : []
       );
       setTotalPages(res.data.totalPages || 1);
       setPage(res.data.currentPage || 1);
+
     } catch (err) {
       console.error("Error fetching milk reports:", err);
     } finally {
@@ -305,7 +182,6 @@ export default function SubAdminExcelDataTable() {
     }
   };
 
-  // Legacy formatDate for explicit field rules
   const formatDate = (value: string | Date | null, withTime = false) => {
     if (!value) return "";
     const date = new Date(value);
@@ -318,11 +194,30 @@ export default function SubAdminExcelDataTable() {
     }).format(date);
   };
 
+  // Fetch when page or search text changes
   useEffect(() => {
-    fetchReports(page);
+    fetchReports(page, searchText);
+    // eslint-disable-next-line
   }, [page]);
 
-  const filterText = filter.trim().toLowerCase();
+  useEffect(() => {
+
+console.log(searchText);
+  }, [searchText]);
+
+  // Debounced fetch on searchText change (always reset to page 1)
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      fetchReports(1, searchText);
+      setPage(1);
+    }, 400); // 400ms debounce
+
+    return () => clearTimeout(delay);
+    // eslint-disable-next-line
+  }, [searchText]);
+
+  // Use searchText for filter
+  const filterText = searchText.trim().toLowerCase();
   const filteredReports = filterText
     ? reports.filter((row) => {
         const rowStr = columns
@@ -345,10 +240,12 @@ export default function SubAdminExcelDataTable() {
       <p className="p-4 text-gray-500">
         <input
           type="text"
-          className="w-full bg-white max-w-md px-4 py-2 border rounded-lg"
-          placeholder="Search in all columns..."
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
+          placeholder="Search..."
+          // value={searchText}
+          value={searchText ?? ""}
+
+          onChange={e => setSearchText(e.target.value)}
+          className="..."
         />
         <br />
         No data available
@@ -367,28 +264,6 @@ export default function SubAdminExcelDataTable() {
         </p>
       </div>
 
-      {/* SEARCH BAR */}
-      <div className="bg-white dark:bg-gray-900 shadow-sm border rounded-xl p-4">
-        <div className="relative max-w-sm w-full">
-          <input
-            type="text"
-            placeholder="Search in all fields..."
-            className="w-full px-4 py-2 pr-10 rounded-lg border 
-                       bg-gray-50 dark:bg-gray-800 dark:text-gray-200
-                       focus:ring-2 focus:ring-brand-500 outline-none"
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-          />
-          {filter && (
-            <button
-              onClick={() => setFilter("")}
-              className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
-            >
-              ✖
-            </button>
-          )}
-        </div>
-      </div>
 
       {/* TABLE CARD */}
       <div className="overflow-hidden rounded-xl border bg-white dark:bg-gray-900 shadow">
@@ -447,12 +322,18 @@ export default function SubAdminExcelDataTable() {
                       </TableCell>
                     ))}
 
-                  <TableCell className="px-4 py-3">
+                  <TableCell className="px-4 py-3 flex flex-col gap-1 py-auto">
                     <Button
                       className="!px-3 !py-1"
                       onClick={() => openEditModal(row)}
                     >
                       Edit
+                    </Button>
+                    <Button
+                      className="!px-3 !py-1 !bg-red-600 hover:!bg-red-700 text-white"
+                      onClick={() => openDeleteModal(row)}
+                    >
+                      Delete
                     </Button>
                   </TableCell>
 
@@ -550,6 +431,50 @@ export default function SubAdminExcelDataTable() {
         )}
       </Modal>
 
+      {/* ------------------- DELETE MODAL ------------------- */}
+      <Modal
+        isOpen={deleteState.open}
+        onClose={() => setDeleteState({ open: false, report: null, loading: false, err: "" })}
+        className="p-6 max-w-lg bg-white dark:bg-gray-100 rounded-xl shadow-lg"
+      >
+        <div>
+          <h2 className="text-xl font-semibold mb-3 text-red-700">
+            Delete Milk Report
+          </h2>
+          <p className="mb-4">
+            Are you sure you want to permanently <span className="font-bold text-red-600">delete</span> this milk report?
+          </p>
+          {deleteState.report && (
+            <div className="mb-4 text-xs rounded border bg-gray-50 px-3 py-2 text-gray-700">
+              <div><b>Date:</b> {formatAnyDate(deleteState.report.docDate)}</div>
+              <div><b>Shift:</b> {deleteState.report.shift}</div>
+              <div><b>VLC Name:</b> {deleteState.report.vlcName}</div>
+              {/* Show ID for trace */}
+              <div className="text-gray-400"><b>ID:</b> {deleteState.report._id}</div>
+            </div>
+          )}
+          {deleteState.err && (
+            <div className="mb-3 text-red-500 text-sm">{deleteState.err}</div>
+          )}
+          <div className="flex items-center justify-end gap-2 mt-2">
+            <Button
+              onClick={() => setDeleteState({ open: false, report: null, loading: false, err: "" })}
+              className="!bg-gray-200 !text-gray-700 hover:!bg-gray-300"
+              disabled={deleteState.loading}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleDeleteReport}
+              className="!bg-red-600 !text-white hover:!bg-red-700"
+              // loading={deleteState.loading}
+            >
+              Yes, Delete
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
       {/* ------------------- EDIT MODAL ------------------- */}
       <Modal
         isOpen={isEditModalOpen}
@@ -603,3 +528,4 @@ export default function SubAdminExcelDataTable() {
     </div>
   );
 }
+

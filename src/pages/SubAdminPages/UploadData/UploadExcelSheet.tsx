@@ -3,8 +3,20 @@ import axios from "axios";
 import ComponentCard from "../../../components/common/ComponentCard";
 import FileInput from "../../../components/form/input/FileInput";
 import Label from "../../../components/form/Label";
+import Input from "../../../components/form/input/InputField";
 import Button from "../../../components/ui/button/Button";
 import Alert from "../../../components/ui/alert/Alert";
+
+// Milk Report fields from milk.report.schema.js (1-38):
+// uploadedOn: Date (filled by backend)
+// uploadedBy: ObjectId (filled by backend)
+// docDate: Date
+// shift: String
+// vlcUploaderCode: String
+// vlcName: String
+// milkWeightLtr: Number
+// fatPercentage: Number
+// snfPercentage: Number
 
 interface AlertState {
   isEnable: boolean;
@@ -13,33 +25,45 @@ interface AlertState {
   message: string;
 }
 
+const initialManualForm = {
+  docDate: "",
+  shift: "",
+  vlcUploaderCode: "",
+  vlcName: "",
+  milkWeightLtr: "",
+  fatPercentage: "",
+  snfPercentage: "",
+};
+
 export default function UploadExcelSheet() {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
-  // Removed `message` state as `alert` will handle all messages
+  const [manualLoading, setManualLoading] = useState(false);
 
   const [alert, setAlert] = useState<AlertState>({
-    isEnable: false, // Initially disabled, only show when an alert occurs
-    variant: "info", // Default variant, will be overridden on alert
+    isEnable: false,
+    variant: "info",
     title: "",
     message: "",
   });
 
+  const [manualForm, setManualForm] = useState<typeof initialManualForm>(initialManualForm);
+
+  // File upload handlers (Excel)
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
 
     if (selectedFile) {
       const allowedTypes = [
-        "application/vnd.ms-excel", // .xls
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // .xlsx
+        "application/vnd.ms-excel",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       ];
 
       if (allowedTypes.includes(selectedFile.type)) {
         setFile(selectedFile);
-        // Clear any previous alerts when a valid file is selected
         setAlert({ isEnable: false, variant: "info", title: "", message: "" });
       } else {
-        setFile(null); // Clear the file state if an invalid file type is selected
+        setFile(null);
         setAlert({
           isEnable: true,
           variant: "error",
@@ -48,9 +72,7 @@ export default function UploadExcelSheet() {
         });
       }
     } else {
-      // If no file is selected (e.g., user cancels the file dialog)
       setFile(null);
-      // Clear any previous alerts
       setAlert({ isEnable: false, variant: "info", title: "", message: "" });
     }
   };
@@ -71,10 +93,9 @@ export default function UploadExcelSheet() {
 
     try {
       setLoading(true);
-      // Clear any previous alerts before a new upload attempt
       setAlert({ isEnable: false, variant: "info", title: "", message: "" });
 
-      const token = localStorage.getItem("sub-admin-token"); // adjust if you store differently
+      const token = localStorage.getItem("sub-admin-token");
 
       const res = await axios.post(
         `${import.meta.env.VITE_API_URL}/api/sub-admin/upload-excel-file`,
@@ -103,6 +124,84 @@ export default function UploadExcelSheet() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Manual entry handlers
+  const handleManualChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setManualForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const clearManualForm = () => setManualForm(initialManualForm);
+
+  const handleManualSubmit = async () => {
+    // Validate required fields
+    if (
+      !manualForm.docDate ||
+      !manualForm.shift ||
+      !manualForm.vlcUploaderCode ||
+      !manualForm.vlcName ||
+      !manualForm.milkWeightLtr ||
+      !manualForm.fatPercentage ||
+      !manualForm.snfPercentage
+    ) {
+      setAlert({
+        isEnable: true,
+        variant: "warning",
+        title: "Missing Fields",
+        message: "Please fill all required fields in the form.",
+      });
+      return;
+    }
+
+    try {
+      setManualLoading(true);
+      setAlert({ isEnable: false, variant: "info", title: "", message: "" });
+
+      const token = localStorage.getItem("sub-admin-token");
+
+      // API expects docDate as ISO date string
+      const payload = {
+        docDate: manualForm.docDate, // expect "YYYY-MM-DD"
+        shift: manualForm.shift,
+        vlcUploaderCode: manualForm.vlcUploaderCode.trim(),
+        vlcName: manualForm.vlcName.trim(),
+        milkWeightLtr: Number(manualForm.milkWeightLtr),
+        fatPercentage: Number(manualForm.fatPercentage),
+        snfPercentage: Number(manualForm.snfPercentage),
+      };
+
+      await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/sub-admin/manual-milk-report-entry`,
+        payload,
+        {
+          headers: {
+            Authorization: `${token}`,
+          },
+        }
+      );
+
+      setAlert({
+        isEnable: true,
+        variant: "success",
+        title: "Entry Successful",
+        message: "Milk report entry saved successfully.",
+      });
+      clearManualForm();
+    } catch (err: any) {
+      console.error("Manual save failed:", err);
+      setAlert({
+        isEnable: true,
+        variant: "error",
+        title: "Save Failed",
+        message: err.response?.data?.error || "Failed to save entry.",
+      });
+    } finally {
+      setManualLoading(false);
     }
   };
 
@@ -139,16 +238,101 @@ export default function UploadExcelSheet() {
           >
             {loading ? "Uploading..." : "Upload"}
           </Button>
+        </div>
+      </ComponentCard>
+      
+      {/* Manual Entry Section */}
+      <ComponentCard title="Record Entry">
+        <div className="flex gap-4 flex-col">
+          <div className="flex w-full gap-4">
+            <div className="w-1/2">
+              <Label>Document Date</Label>
+              <Input
+                name="docDate"
+                placeholder="DD-MM-YYYY"
+                type="date"
+                value={manualForm.docDate}
+                onChange={handleManualChange}
+              />
+            </div>
+            <div className="w-1/2">
+              <Label>Shift</Label>
+              <Input
+                name="shift"
+                placeholder="Morning/Evening"
+                type="text"
+                value={manualForm.shift}
+                onChange={handleManualChange}
+              />
+            </div>
+          </div>
 
-          {/* {message && (
-            <p
-              className={`mt-2 text-sm ${
-                message.startsWith("✅") ? "text-green-600" : "text-red-600"
-              }`}
-            >
-              {message}
-            </p>
-          )} */}
+          <div className="flex w-full gap-4">
+            <div className="w-1/2">
+              <Label>Vendor Code</Label>
+              <Input
+                name="vlcUploaderCode"
+                placeholder="123456"
+                type="text"
+                value={manualForm.vlcUploaderCode}
+                onChange={handleManualChange}
+              />
+            </div>
+            <div className="w-1/2">
+              <Label>Vendor Name</Label>
+              <Input
+                name="vlcName"
+                placeholder="VLC Name"
+                type="text"
+                value={manualForm.vlcName}
+                onChange={handleManualChange}
+              />
+            </div>
+          </div>
+
+          <div className="flex w-full gap-4">
+            <div className="w-1/3">
+              <Label>Milk Weight (litres)</Label>
+              <Input
+                name="milkWeightLtr"
+                placeholder="100"
+                type="number"
+                min="0"
+                value={manualForm.milkWeightLtr}
+                onChange={handleManualChange}
+              />
+            </div>
+            <div className="w-1/3">
+              <Label>Fat %</Label>
+              <Input
+                name="fatPercentage"
+                placeholder="8.0"
+                type="number"
+                min="0"
+                value={manualForm.fatPercentage}
+                onChange={handleManualChange}
+              />
+            </div>
+            <div className="w-1/3">
+              <Label>SNF %</Label>
+              <Input
+                name="snfPercentage"
+                placeholder="8.6"
+                type="number"
+                min="0"
+                value={manualForm.snfPercentage}
+                onChange={handleManualChange}
+              />
+            </div>
+          </div>
+
+          <Button
+            className="my-8 w-40"
+            onClick={handleManualSubmit}
+            disabled={manualLoading}
+          >
+            {manualLoading ? "Saving..." : "Save Entry"}
+          </Button>
         </div>
       </ComponentCard>
     </>

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, Dispatch, SetStateAction } from "react";
 
 type SidebarContextType = {
   isExpanded: boolean;
@@ -11,6 +11,9 @@ type SidebarContextType = {
   setIsHovered: (isHovered: boolean) => void;
   setActiveItem: (item: string | null) => void;
   toggleSubmenu: (item: string) => void;
+  setSearchText: Dispatch<SetStateAction<string>>;
+  searchText: string;
+  
 };
 
 const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
@@ -32,6 +35,9 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isHovered, setIsHovered] = useState(false);
   const [activeItem, setActiveItem] = useState<string | null>(null);
   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
+  // const [searchText, setSearchText] = useState<string | null>(null);
+  const [searchText, setSearchText] = useState<string>("");
+
 
   useEffect(() => {
     const handleResize = () => {
@@ -75,6 +81,8 @@ export const SidebarProvider: React.FC<{ children: React.ReactNode }> = ({
         setIsHovered,
         setActiveItem,
         toggleSubmenu,
+        setSearchText,
+        searchText
       }}
     >
       {children}

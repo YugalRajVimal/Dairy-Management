@@ -10,6 +10,7 @@ import {
 } from "../../../components/ui/table";
 import Button from "../../../components/ui/button/Button";
 import { Modal } from "../../../components/ui/modal";
+import { useSidebar } from "../../../context/SidebarContext";
 
 interface History {
   [key: string]: any;
@@ -50,12 +51,17 @@ export default function UploadedSalesDataTable() {
   const [limit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
 
-  const [filter, setFilter] = useState("");
-
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editData, setEditData] = useState<SalesReport | null>(null);
 
   const [selectedHistory, setSelectedHistory] = useState<History[] | null>(null);
+
+  // New: For Delete confirmation
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleteRowId, setDeleteRowId] = useState<string | null>(null);
+
+  // Use searchText/setSearchText from SidebarContext
+  const { searchText, setSearchText } = useSidebar();
 
   const hiddenColumns = [
     "_id",
@@ -66,14 +72,14 @@ export default function UploadedSalesDataTable() {
     "history",
   ];
 
-  const fetchReports = async (pageNumber: number) => {
+  const fetchReports = async (pageNumber: number, search: string) => {
     try {
       setLoading(true);
 
       const res = await axios.get(
         `${API_URL}/api/sub-admin/get-uploaded-sales-report`,
         {
-          params: { page: pageNumber, limit },
+          params: { page: pageNumber, limit, search: search.trim() },
           headers: {
             Authorization: localStorage.getItem("sub-admin-token"),
           },
@@ -98,25 +104,36 @@ export default function UploadedSalesDataTable() {
     }
   };
 
+  // Fetch reports on page or searchText change
   useEffect(() => {
-    fetchReports(page);
-  }, [page]);
+    fetchReports(page, searchText || "");
+    // eslint-disable-next-line
+  }, [page, searchText]);
 
   const openEditModal = (row: SalesReport) => {
     setEditData({ ...row });
     setIsEditModalOpen(true);
   };
 
+  const openDeleteModal = (rowId: string) => {
+    setDeleteRowId(rowId);
+    setIsDeleteModalOpen(true);
+  };
+
   const handleUpdateSalesReport = async () => {
     try {
       if (!editData?._id) return;
 
-      const body = {
+      const body: any = {
         itemCode: editData.itemCode,
         itemName: editData.itemName,
         quantity: editData.quantity,
         docDate: editData.docDate,
       };
+
+      if ("vlcUploaderCode" in editData) {
+        body.vlcUploaderCode = editData.vlcUploaderCode;
+      }
 
       await axios.put(
         `${API_URL}/api/sub-admin/update-sales-report/${editData._id}`,
@@ -129,30 +146,42 @@ export default function UploadedSalesDataTable() {
       );
 
       setIsEditModalOpen(false);
-      fetchReports(page);
+      fetchReports(page, searchText || "");
     } catch (error) {
       console.error("Error updating sales report:", error);
     }
   };
 
-  const filterText = filter.trim().toLowerCase();
-  const filteredReports = filterText
-    ? reports.filter((row) => {
-        const rowString = columns
-          .map((col) => {
-            if (col === "docDate" || col === "uploadedOn")
-              return formatAnyDate(row[col], true);
+  // Reset page when searchText changes
+useEffect(() => {
+  setPage(1);
+}, [searchText]);
 
-            return row[col] ? String(row[col]) : "";
-          })
-          .join(" ")
-          .toLowerCase();
 
-        return rowString.includes(filterText);
-      })
-    : reports;
+  // Delete logic
+  const handleDeleteSalesReport = async () => {
+    if (!deleteRowId) return;
+    try {
+      await axios.delete(
+        `${API_URL}/api/sub-admin/delete-sales-report/${deleteRowId}`,
+        {
+          headers: {
+            Authorization: localStorage.getItem("sub-admin-token"),
+          },
+        }
+      );
+      setIsDeleteModalOpen(false);
+      setDeleteRowId(null);
+      // If we're on the last page and delete the last item, ensure we don't end up on an empty page
+      // Refetch accordingly
+      fetchReports(page, searchText || "");
+    } catch (error) {
+      console.error("Error deleting sales report:", error);
+    }
+  };
 
-  // Loading & Empty states with improved spacing
+
+
   if (loading)
     return (
       <div className="p-8 flex justify-center items-center min-h-32">
@@ -160,19 +189,9 @@ export default function UploadedSalesDataTable() {
       </div>
     );
 
-  if (!filteredReports.length)
+  if (!reports.length)
     return (
       <div className="p-8 flex flex-col items-center">
-        <input
-          type="text"
-          className="w-full max-w-md px-5 py-3 border rounded-lg mb-6 shadow
-                     bg-white dark:bg-gray-800 dark:text-gray-200
-                     border-gray-300 dark:border-gray-700
-                     placeholder:text-gray-400 dark:placeholder:text-gray-400"
-          placeholder="Search..."
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-        />
         <p className="text-gray-500 dark:text-gray-400 mt-6 text-lg">No data available</p>
       </div>
     );
@@ -181,18 +200,9 @@ export default function UploadedSalesDataTable() {
     <>
       <div className="rounded-2xl border bg-white dark:bg-gray-900 shadow-lg mt-8 mx-auto max-w-6xl border-gray-200 dark:border-gray-700">
         {/* SEARCH */}
+        {/* Search input has been removed as per requirements. */}
         <div className="p-6 pb-2 flex justify-between items-center flex-wrap gap-2">
-          <input
-            type="text"
-            className="w-full max-w-md px-5 py-3 border rounded-lg shadow
-                       focus:outline-none focus:ring-2 focus:ring-blue-100
-                       bg-white dark:bg-gray-800 dark:text-gray-200
-                       border-gray-300 dark:border-gray-700
-                       placeholder:text-gray-400 dark:placeholder:text-gray-400"
-            placeholder="Search..."
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-          />
+          {/* Intentionally left empty */}
         </div>
 
         {/* TABLE */}
@@ -225,7 +235,7 @@ export default function UploadedSalesDataTable() {
             </TableHeader>
 
             <TableBody>
-              {filteredReports.map((row, idx) => (
+              {reports.map((row, idx) => (
                 <TableRow key={idx} className="even:bg-gray-50 dark:even:bg-gray-800">
                   {columns
                     .filter((c) => c !== "edited")
@@ -240,12 +250,19 @@ export default function UploadedSalesDataTable() {
                       </TableCell>
                     ))}
 
-                  <TableCell className="text-center align-middle px-5 py-3 bg-white dark:bg-gray-900">
+                  <TableCell className="text-center align-middle px-5 py-3 bg-white dark:bg-gray-900 flex items-center gap-2 justify-center">
                     <Button
-                      className="px-4 py-2"
+                      className="!px-3 !py-1"
                       onClick={() => openEditModal(row)}
                     >
                       Edit
+                    </Button>
+                    <Button
+                      className="!px-3 !py-1 !bg-red-600 hover:!bg-red-700 text-white"
+
+                      onClick={() => openDeleteModal(row._id)}
+                    >
+                      Delete
                     </Button>
                   </TableCell>
 
@@ -253,7 +270,7 @@ export default function UploadedSalesDataTable() {
                     <TableCell className="text-center align-middle px-5 py-3 bg-white dark:bg-gray-900">
                       {row.edited ? (
                         <Button
-                          className="px-4 py-2"
+                        className="!px-3 !py-1"
                           onClick={() => setSelectedHistory(row.history || [])}
                         >
                           View
@@ -429,6 +446,24 @@ export default function UploadedSalesDataTable() {
               />
             </div>
 
+            {/* vlcUploaderCode can also get updated */}
+            {"vlcUploaderCode" in editData ? (
+              <div className="flex flex-col gap-2">
+                <label className="font-medium mb-1 text-gray-700 dark:text-gray-200">VLC Uploader Code</label>
+                <input
+                  type="text"
+                  className="w-full border rounded px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-100
+                             bg-white dark:bg-gray-800 dark:text-gray-200
+                             border-gray-300 dark:border-gray-700
+                             placeholder:text-gray-400 dark:placeholder:text-gray-400"
+                  value={editData.vlcUploaderCode ?? ""}
+                  onChange={e =>
+                    setEditData({ ...editData, vlcUploaderCode: e.target.value })
+                  }
+                />
+              </div>
+            ) : null}
+
             <Button
               onClick={handleUpdateSalesReport}
               className="w-full mt-6 py-3 px-5"
@@ -437,6 +472,40 @@ export default function UploadedSalesDataTable() {
             </Button>
           </div>
         )}
+      </Modal>
+
+      {/* DELETE MODAL */}
+      <Modal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setDeleteRowId(null);
+        }}
+        className="p-8 max-w-sm bg-white dark:bg-gray-900"
+      >
+        <h3 className="text-xl font-semibold mb-4 text-center text-gray-800 dark:text-gray-100">
+          Delete Sales Report
+        </h3>
+        <div className="mb-6 text-center text-gray-700 dark:text-gray-200">
+          Are you sure you want to delete this sales report? This action cannot be undone.
+        </div>
+        <div className="flex gap-4 justify-center">
+          <Button
+            className="px-6 py-2 !bg-red-600 hover:!bg-red-700 text-white"
+            onClick={handleDeleteSalesReport}
+          >
+            Delete
+          </Button>
+          <Button
+            className="px-6 py-2"
+            onClick={() => {
+              setIsDeleteModalOpen(false);
+              setDeleteRowId(null);
+            }}
+          >
+            Cancel
+          </Button>
+        </div>
       </Modal>
     </>
   );

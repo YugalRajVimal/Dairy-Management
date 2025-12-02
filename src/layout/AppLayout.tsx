@@ -134,6 +134,8 @@ const AppLayout: React.FC = () => {
     boolean | null
   >(null);
 
+  
+
   useEffect(() => {
     const checkAuth = async () => {
       try {
