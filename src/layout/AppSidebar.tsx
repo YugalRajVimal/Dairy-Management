@@ -47,7 +47,11 @@ const navItems: NavItem[] = [
     name: "Issued Assets",
     path: "/admin/issued-assets-report",
   },
-  
+  {
+    icon: <HorizontaLDots />,
+    name: "Manage Routes",
+    path: "/admin/manage-routes",
+  },
   // {
   //   icon: <FileIcon />,
   //   name: "Excel Sheet View",

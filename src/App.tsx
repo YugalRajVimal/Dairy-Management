@@ -54,6 +54,7 @@ import SupervisorAllVendors from "./pages/Supervisor/AllVendors/AllVendors";
 import TreeFormation from "./pages/SubAdminPages/TreeFormation/TreeFormation";
 import AdminTreeFormation from "./pages/AdminPages/TreeFormation/TreeFormation";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import HandleRoutes from "./pages/AdminPages/HandleRoutes/HandleRoutes";
 
 export default function App() {
   return (
@@ -65,6 +66,9 @@ export default function App() {
           {/* Dashboard Layout */}
           <Route element={<AppLayout />}>
             <Route index path="/admin" element={<Home />} />
+
+            <Route index path="/admin/manage-routes" element={<HandleRoutes />} />
+
             <Route
               index
               path="/admin/onboard-sub-admin"

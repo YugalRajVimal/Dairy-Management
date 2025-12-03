@@ -8,7 +8,6 @@ import {
   TableRow,
 } from "../../../components/ui/table";
 import { UserCircleIcon, ChevronDownIcon, ChevronUpIcon } from "../../../icons";
-import { Link } from "react-router";
 import Button from "../../../components/ui/button/Button";
 
 interface SubAdmins {
@@ -417,7 +416,7 @@ const AdminTreeFormation = () => {
               <TableCell isHeader>
                 Address Line, City, State, Pin Code
               </TableCell>
-              <TableCell isHeader>Action</TableCell>
+              {/* <TableCell isHeader>Action</TableCell> */}
             </TableRow>
           </TableHeader>
 
@@ -472,15 +471,6 @@ const AdminTreeFormation = () => {
                   <TableCell>
                     {subadmin.address?.addressLine}, {subadmin.address?.city},{" "}
                     {subadmin.address?.state}, {subadmin.address?.pincode}
-                  </TableCell>
-
-                  <TableCell>
-                    <Link
-                      to="/admin/issue-assets-to-sub-admin"
-                      state={{ subAdminId: subadmin._id }}
-                    >
-                      <Button>Issue Assets</Button>
-                    </Link>
                   </TableCell>
                 </TableRow>
               );

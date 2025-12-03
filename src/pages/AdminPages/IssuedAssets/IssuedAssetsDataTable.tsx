@@ -143,7 +143,7 @@ export default function UploadedAdminAssetsDataTable() {
                     isHeader
                     className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400"
                   >
-                    {col.trim()}
+                    {col.trim() === "subAdminId" ? "Sub Admin Details" : col.trim()}
                   </TableCell>
                 ))}
               </TableRow>
@@ -163,7 +163,7 @@ export default function UploadedAdminAssetsDataTable() {
                     {columns.map((col) => (
                       <TableCell
                         key={col}
-                        className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400"
+                        className="px-4 py-3 text-gray-500 whitespace-nowrap text-start text-theme-sm dark:text-gray-400"
                       >
                         {col === "uploadedOn" ? (
                           formatDate(row[col], true)
@@ -173,7 +173,17 @@ export default function UploadedAdminAssetsDataTable() {
                           <Button onClick={() => setSelectedHistory(row[col])}>
                             View History ({row[col].length})
                           </Button>
-                        ) : typeof row[col] === "object" ? (
+                        ) : col === "subAdminId" && typeof row[col] === "object" && row[col] !== null ? (
+                          // Print all key-value pairs of subAdminId, separated by comma, but each pair on a different line
+                          <div>
+                            {Object.entries(row[col]).map(([k, v], idx) => (
+                              <div key={idx}>
+                                {`${k}: ${v}`}
+                                {idx !== Object.entries(row[col]).length - 1 && ","}
+                              </div>
+                            ))}
+                          </div>
+                        ) : typeof row[col] === "object" && row[col] !== null ? (
                           Object.values(row[col]).join(", ")
                         ) : (
                           row[col] ?? ""

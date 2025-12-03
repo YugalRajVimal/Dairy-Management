@@ -243,7 +243,7 @@ const TreeFormation = () => {
                     key={supervisor._id}
                     className="cursor-pointer hover:bg-gray-50"
                   >
-                    <TableCell className="px-5 py-4 flex items-center gap-3 justify-center">
+                    <TableCell className="px-5 py-4 flex items-center gap-3 justify-start">
                       {expanded ? (
                         <ChevronDownIcon
                           onClick={() => setExpandedRoutes(expandedRoutes.filter((r) => r !== supervisor._id))}
@@ -284,36 +284,65 @@ const TreeFormation = () => {
                   </TableRow>
 
                   {/* Vendors under Supervisor */}
-                  {expanded &&
-                    relatedVendors.map((vendor) => (
-                      <TableRow
-                        key={vendor._id}
-                        className=" border-l-4 border-blue-400 bg-blue-200"
-                      >
-                        <TableCell className="px-10 py-3 flex items-center gap-3 justify-center">
-                          <UserCircleIcon width={22} height={22} />
-                          <span>{vendor.name} (Vendor)</span>
-                        </TableCell>
-                        <TableCell className="text-center">{vendor.vendorId}</TableCell>
-                        <TableCell className="text-center">{String(vendor.route)}</TableCell>
-                        <TableCell className="text-center">
-                          <a
-                            href={`mailto:${vendor.email}`}
-                            className="text-blue-600 hover:underline"
-                          >
-                            {vendor.email}
-                          </a>
-                          <br />
-                          {vendor.phoneNo}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {vendor.address?.addressLine},{" "}
-                          {vendor.address?.city},{" "}
-                          {vendor.address?.state},{" "}
-                          {vendor.address?.pincode}
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                 {/* Vendors under Supervisor grouped by Routes */}
+{expanded &&
+  Array.isArray(supervisor.supervisorRoutes) &&
+  supervisor.supervisorRoutes.map((routeNo) => {
+    const vendorsForRoute = relatedVendors.filter((v) =>
+      compareRouteValues(v.route, routeNo)
+    );
+
+    if (vendorsForRoute.length === 0) return null;
+
+    return (
+      <>
+        {/* Route Label */}
+        <TableRow
+          key={`${supervisor._id}-route-${routeNo}`}
+          className=" bg-blue-100 hover:bg-blue-200 w-full"
+        >
+          <TableCell
+
+            className="pl-14 py-1 w-fit font-bold text-sm text-blue-700"
+          >
+            Route No: {routeNo}
+          </TableCell>
+        </TableRow>
+
+        {/* Vendor Rows */}
+        {vendorsForRoute.map((vendor) => (
+          <TableRow
+            key={vendor._id}
+            className="ml-40 bg-blue-50 hover:bg-blue-200 w-full"
+          >
+            <TableCell className="px-12 py-3 flex items-center gap-3">
+              <UserCircleIcon width={20} height={20} />
+              <span>{vendor.name} (Vendor)</span>
+            </TableCell>
+            <TableCell className="text-center">{vendor.vendorId}</TableCell>
+            <TableCell className="text-center">{String(vendor.route)}</TableCell>
+            <TableCell className="text-center">
+              <a
+                href={`mailto:${vendor.email}`}
+                className="text-blue-600 hover:underline"
+              >
+                {vendor.email}
+              </a>
+              <br />
+              {vendor.phoneNo}
+            </TableCell>
+            <TableCell className="text-center">
+              {vendor.address?.addressLine},{" "}
+              {vendor.address?.city},{" "}
+              {vendor.address?.state},{" "}
+              {vendor.address?.pincode}
+            </TableCell>
+          </TableRow>
+        ))}
+      </>
+    );
+  })}
+
                 </>
               );
             })}
