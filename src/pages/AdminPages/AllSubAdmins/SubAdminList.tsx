@@ -11,7 +11,66 @@ import { UserCircleIcon } from "../../../icons";
 import Button from "../../../components/ui/button/Button";
 import { Link } from "react-router";
 
-// Interface for Vendors
+// Simple modal (like on Vendor/Supervisor pages)
+function Modal({
+  open,
+  onClose,
+  title,
+  children,
+}: {
+  open: boolean;
+  onClose: () => void;
+  title?: string;
+  children: React.ReactNode;
+}) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg min-w-[320px] max-w-md w-full">
+        {title && <div className="p-4 border-b border-gray-200 font-bold text-lg">{title}</div>}
+        <div className="p-4">{children}</div>
+        <div className="flex justify-end px-4 pb-4">
+          <Button variant="secondary" onClick={onClose}>
+            Close
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Simple input
+function LabeledInput({
+  label,
+  value,
+  onChange,
+  name,
+  type = "text",
+  required = false,
+}: {
+  label: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  name: string;
+  type?: string;
+  required?: boolean;
+}) {
+  return (
+    <div className="mb-3">
+      <label className="block text-sm font-medium mb-1">{label}{required ? <span className="text-red-500">*</span> : null}</label>
+      <input
+        type={type}
+        value={value}
+        name={name}
+        required={required}
+        onChange={onChange}
+        className="w-full px-3 py-2 border rounded-lg focus:ring focus:ring-brand-100 text-gray-900 dark:text-white dark:bg-gray-800 dark:border-gray-700"
+      />
+    </div>
+  );
+}
+
+// Interface for SubAdmins
 interface SubAdmins {
   _id: string;
   name: string;
@@ -34,6 +93,24 @@ export default function SubAdminList() {
 
   // Filtering state
   const [filter, setFilter] = useState<string>("");
+
+  // For Edit Modal
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingSubAdmin, setEditingSubAdmin] = useState<SubAdmins | null>(null);
+  const [editValues, setEditValues] = useState({
+    name: "",
+    nickName: "",
+    email: "",
+    phoneNo: "",
+    zone: "",
+    addressLine: "",
+    city: "",
+    state: "",
+    pincode: "",
+  });
+  const [editSubmitting, setEditSubmitting] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [editSuccess, setEditSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchSubAdmins = async () => {
@@ -61,6 +138,83 @@ export default function SubAdminList() {
 
     fetchSubAdmins();
   }, []);
+
+  // When edit modal opens, fill the form
+  const handleEditClick = (subadmin: SubAdmins) => {
+    setEditingSubAdmin(subadmin);
+    setEditValues({
+      name: subadmin.name || "",
+      nickName: subadmin.nickName || "",
+      email: subadmin.email || "",
+      phoneNo: subadmin.phoneNo || "",
+      zone: subadmin.zone || "",
+      addressLine: subadmin.address?.addressLine || "",
+      city: subadmin.address?.city || "",
+      state: subadmin.address?.state || "",
+      pincode: subadmin.address?.pincode || "",
+    });
+    setEditError(null);
+    setEditSuccess(null);
+    setEditModalOpen(true);
+  };
+
+  // Save edit
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEditSubmitting(true);
+    setEditError(null);
+    setEditSuccess(null);
+
+    try {
+      const token = localStorage.getItem("admin-token");
+      const res = await axios.put(
+        `${import.meta.env.VITE_API_URL}/api/admin/update-sub-admin/${editingSubAdmin?._id}`,
+        {
+          name: editValues.name,
+          nickName: editValues.nickName,
+          email: editValues.email,
+          phoneNo: editValues.phoneNo,
+          zone: editValues.zone,
+          addressLine: editValues.addressLine,
+          city: editValues.city,
+          state: editValues.state,
+          pincode: editValues.pincode,
+        },
+        {
+          headers: {
+            Authorization: `${token}`,
+          },
+        }
+      );
+      setEditSuccess("Sub Admin updated successfully!");
+      // Update list locally
+      setSubAdmins((prev) =>
+        prev.map((sa) =>
+          sa._id === editingSubAdmin?._id
+            ? {
+                ...sa,
+                ...res.data.subAdmin,
+                address: {
+                  addressLine: res.data.subAdmin.address?.addressLine || "",
+                  city: res.data.subAdmin.address?.city || "",
+                  state: res.data.subAdmin.address?.state || "",
+                  pincode: res.data.subAdmin.address?.pincode || "",
+                },
+              }
+            : sa
+        )
+      );
+      setTimeout(() => {
+        setEditModalOpen(false);
+      }, 1200);
+    } catch (err: any) {
+      setEditError(
+        err.response?.data?.message || "Failed to update Sub Admin. Please try again."
+      );
+    } finally {
+      setEditSubmitting(false);
+    }
+  };
 
   // Filtering logic
   const filteredSubAdmins = filter.trim()
@@ -221,13 +375,16 @@ export default function SubAdminList() {
                   <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
                     {subadmin.address?.pincode}
                   </TableCell>
-                  <TableCell className="px-4 py-3 text-gray-600 dark:text-gray-400">
+                  <TableCell className="px-4 py-3 flex flex-col gap-2 justify-center items-center text-gray-600 dark:text-gray-400 space-x-2">
                     <Link
                       to="/admin/issue-assets-to-sub-admin"
                       state={{ subAdminId: subadmin._id }}
                     >
-                      <Button>Issue Assets</Button>
+                      <Button className="!px-4 !py-2 bg-blue-500 whitespace-nowrap">Issue Assets</Button>
                     </Link>
+                    <Button className="!px-4 !py-2 bg-red-500" onClick={() => handleEditClick(subadmin)}>
+                      Edit
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))
@@ -235,6 +392,105 @@ export default function SubAdminList() {
           </TableBody>
         </Table>
       </div>
+      {/* Edit Modal */}
+      <Modal
+        open={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        title="Edit Sub Admin"
+      >
+        <form onSubmit={handleEditSubmit}>
+          <LabeledInput
+            label="Name"
+            name="name"
+            value={editValues.name}
+            onChange={(e) =>
+              setEditValues((v) => ({ ...v, name: e.target.value }))
+            }
+            required
+          />
+          <LabeledInput
+            label="Nick Name"
+            name="nickName"
+            value={editValues.nickName}
+            onChange={(e) =>
+              setEditValues((v) => ({ ...v, nickName: e.target.value }))
+            }
+          />
+          <LabeledInput
+            label="Email"
+            name="email"
+            value={editValues.email}
+            type="email"
+            onChange={(e) =>
+              setEditValues((v) => ({ ...v, email: e.target.value }))
+            }
+            required
+          />
+          <LabeledInput
+            label="Phone No"
+            name="phoneNo"
+            value={editValues.phoneNo}
+            onChange={(e) =>
+              setEditValues((v) => ({ ...v, phoneNo: e.target.value }))
+            }
+            required
+          />
+          <LabeledInput
+            label="Zone"
+            name="zone"
+            value={editValues.zone}
+            onChange={(e) =>
+              setEditValues((v) => ({ ...v, zone: e.target.value }))
+            }
+          />
+          <LabeledInput
+            label="Address Line"
+            name="addressLine"
+            value={editValues.addressLine}
+            onChange={(e) =>
+              setEditValues((v) => ({ ...v, addressLine: e.target.value }))
+            }
+          />
+          <LabeledInput
+            label="City"
+            name="city"
+            value={editValues.city}
+            onChange={(e) =>
+              setEditValues((v) => ({ ...v, city: e.target.value }))
+            }
+          />
+          <LabeledInput
+            label="State"
+            name="state"
+            value={editValues.state}
+            onChange={(e) =>
+              setEditValues((v) => ({ ...v, state: e.target.value }))
+            }
+          />
+          <LabeledInput
+            label="Pin Code"
+            name="pincode"
+            value={editValues.pincode}
+            onChange={(e) =>
+              setEditValues((v) => ({ ...v, pincode: e.target.value }))
+            }
+          />
+          {editError && (
+            <div className="p-2 text-sm text-red-600">{editError}</div>
+          )}
+          {editSuccess && (
+            <div className="p-2 text-sm text-green-600">{editSuccess}</div>
+          )}
+          <div className="flex justify-end mt-4">
+            <Button
+              disabled={editSubmitting}
+              className="min-w-[110px]"
+            >
+              {editSubmitting ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }
