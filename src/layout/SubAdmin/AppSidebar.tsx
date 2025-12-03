@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router";
 
 // Assume these icons are imported from an icon library
 import {
+  AngleDownIcon,
   ArrowDownIcon,
   ArrowUpIcon,
   ChevronDownIcon,
@@ -30,71 +31,108 @@ const navItems: NavItem[] = [
   },
   {
     icon: <ArrowDownIcon />,
-    name: "Onboard Supervisor",
-    path: "/sub-admin/onboard-supervisor",
-  },
-  {
-    icon: <UserIcon />,
-    name: "All Supervisor",
-    path: "/sub-admin/all-supervisors",
-  },
-  {
-    icon: <ArrowDownIcon />,
-    name: "Onboard Vendor",
-    path: "/sub-admin/onboard-vendor",
-  },
-  {
-    icon: <UserIcon />,
-    name: "All Vendors",
-    path: "/sub-admin/all-vendors",
-  },
-  {
-    icon: <ChevronDownIcon />,
     name: "Tree Formation",
     path: "/sub-admin/tree-formation",
   },
   {
-    icon: <ArrowUpIcon />,
-    name: "Upload Milk Reports",
-    path: "/sub-admin/upload-excel-sheet",
+    name: "Supervisor",
+    icon: <UserIcon />,
+    subItems: [
+      { name: "Onboard Supervisor", path: "/sub-admin/onboard-supervisor" },
+      { name: "All Supervisor", path: "/sub-admin/all-supervisors" },
+    ],
   },
   {
-    icon: <ArrowUpIcon />,
-    name: "Upload Sales Reports",
-    path: "/sub-admin/upload-sales-report",
+    name: "Vendor",
+    icon: <UserIcon />,
+    subItems: [
+      { name: "Onboard Vendor", path: "/sub-admin/onboard-vendor" },
+      { name: "All Vendors", path: "/sub-admin/all-vendors" }
+    ]
   },
   {
-    icon: <HorizontaLDots />,
-    name: "Assets Inventory",
-    path: "/sub-admin/assets-inventory",
+    name: "Milk Report",
+    icon: <FileIcon />,
+    subItems: [
+      { name: "Upload Milk Reports", path: "/sub-admin/upload-excel-sheet" },
+      { name: "Uploaded Milk Report", path: "/sub-admin/excel-sheet-view" },
+    ],
   },
+  {
+    name: "Sales Report",
+    icon: <FileIcon />,
+    subItems: [
+      { name: "Upload Sales Reports", path: "/sub-admin/upload-sales-report" },
+      { name: "Uploaded Sales Report", path: "/sub-admin/sales-report-view" },
+    ],
+  },
+  {
+    name: "Assets Report",
+    icon: <FileIcon />,
+    subItems: [
+      { name: "Assets Inventory", path: "/sub-admin/assets-inventory" },
+      { name: "Manage assets", path: "/sub-admin/manage-assets" },
+      { name: "Uploaded Assets Report", path: "/sub-admin/asstes-report-view" },
+
+
+      
+    ],
+  },
+  // {
+  //   icon: <ArrowDownIcon />,
+  //   name: "Onboard Vendor",
+  //   path: "",
+  // },
+  // {
+  //   icon: <UserIcon />,
+  //   name: "All Vendors",
+  //   path: "",
+  // },
+
+  // {
+  //   icon: <ArrowUpIcon />,
+  //   name: "Upload Milk Reports",
+  //   path: "/sub-admin/upload-excel-sheet",
+  // },
+  // {
+  //   icon: <ArrowUpIcon />,
+  //   name: "Upload Sales Reports",
+  //   path: "/sub-admin/upload-sales-report",
+  // },
+  // {
+  //   icon: <FileIcon />,
+  //   name: "Uploaded Sales Report",
+  //   path: "/sub-admin/sales-report-view",
+  // },
+  // {
+  //   icon: <HorizontaLDots />,
+  //   name: "Assets Inventory",
+  //   path: "/sub-admin/assets-inventory",
+  // },
   
-  {
-    icon: <ArrowUpIcon />,
-    name: "Manage assets",
-    path: "/sub-admin/manage-assets",
-  },
+  // {
+  //   icon: <ArrowUpIcon />,
+  //   name: "Manage assets",
+  //   path: "/sub-admin/manage-assets",
+  // },
+  // {
+  //   icon: <FileIcon />,
+  //   name: "Uploaded Assets Report",
+  //   path: "/sub-admin/asstes-report-view",
+  // },
 
   // {
   //   icon: <ListIcon />,
   //   name: "Uploaded Milk Reports",
   //   path: "/sub-admin/all-excel-sheet/0",
   // },
-  {
-    icon: <FileIcon />,
-    name: "Uploaded Milk Report",
-    path: "/sub-admin/excel-sheet-view",
-  },
-  {
-    icon: <FileIcon />,
-    name: "Uploaded Sales Report",
-    path: "/sub-admin/sales-report-view",
-  },
-  {
-    icon: <FileIcon />,
-    name: "Uploaded Assets Report",
-    path: "/sub-admin/asstes-report-view",
-  },
+  // {
+  //   icon: <FileIcon />,
+  //   name: "Uploaded Milk Report",
+  //   path: "/sub-admin/excel-sheet-view",
+  // },
+
+
 
   {
     icon: <UserCircleIcon />,
