@@ -30,7 +30,7 @@ function Modal({
         {title && <div className="p-4 border-b border-gray-200 font-bold text-lg">{title}</div>}
         <div className="p-4">{children}</div>
         <div className="flex justify-end px-4 pb-4">
-          <Button variant="secondary" onClick={onClose}>
+          <Button  onClick={onClose}>
             Close
           </Button>
         </div>
