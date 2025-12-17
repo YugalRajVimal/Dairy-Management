@@ -12,6 +12,12 @@ import Button from "../../../components/ui/button/Button";
 import { Modal } from "../../../components/ui/modal";
 import { useSidebar } from "../../../context/SidebarContext";
 
+// Add prop types
+interface UploadedSalesDataTableProps {
+  startDate?: string | null;
+  endDate?: string | null;
+}
+
 interface History {
   [key: string]: any;
 }
@@ -33,7 +39,6 @@ function isDateLike(value: any) {
   return !isNaN(date.getTime());
 }
 
-
 function formatAnyDate(value: any, withTime = false) {
   if (!isDateLike(value)) return value;
 
@@ -46,7 +51,8 @@ function formatAnyDate(value: any, withTime = false) {
   }).format(date);
 }
 
-export default function UploadedSalesDataTable() {
+// Make it accept startDate and endDate as props
+export default function UploadedSalesDataTable({ startDate, endDate }: UploadedSalesDataTableProps) {
   const API_URL = import.meta.env.VITE_API_URL;
 
   const [reports, setReports] = useState<SalesReport[]>([]);
@@ -78,14 +84,19 @@ export default function UploadedSalesDataTable() {
     "history",
   ];
 
+  // Include startDate and endDate in API params
   const fetchReports = async (pageNumber: number, search: string) => {
     try {
       setLoading(true);
 
+      const params: any = { page: pageNumber, limit, search: search.trim() };
+      if (startDate) params.startDate = startDate;
+      if (endDate) params.endDate = endDate;
+
       const res = await axios.get(
         `${API_URL}/api/sub-admin/get-uploaded-sales-report`,
         {
-          params: { page: pageNumber, limit, search: search.trim() },
+          params,
           headers: {
             Authorization: localStorage.getItem("sub-admin-token"),
           },
@@ -112,11 +123,11 @@ export default function UploadedSalesDataTable() {
     }
   };
 
-  // Fetch reports on page or searchText change
+  // Fetch reports on page, searchText, startDate, endDate change
   useEffect(() => {
     fetchReports(page, searchText || "");
     // eslint-disable-next-line
-  }, [page, searchText]);
+  }, [page, searchText, startDate, endDate]);
 
   const openEditModal = (row: SalesReport) => {
     setEditData({ ...row });

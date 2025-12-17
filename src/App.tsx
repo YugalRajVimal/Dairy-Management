@@ -55,6 +55,8 @@ import TreeFormation from "./pages/SubAdminPages/TreeFormation/TreeFormation";
 import AdminTreeFormation from "./pages/AdminPages/TreeFormation/TreeFormation";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import HandleRoutes from "./pages/AdminPages/HandleRoutes/HandleRoutes";
+import Maintenance from "./pages/AdminPages/Maintenance/Maintenance";
+import MaintenancePage from "./pages/MaintenancePage";
 
 export default function App() {
   return (
@@ -66,6 +68,8 @@ export default function App() {
           {/* Dashboard Layout */}
           <Route element={<AppLayout />}>
             <Route index path="/admin" element={<Home />} />
+            <Route index path="/admin/maintenance" element={<Maintenance />} />
+
 
             <Route index path="/admin/manage-routes" element={<HandleRoutes />} />
 
@@ -242,6 +246,8 @@ export default function App() {
           <Route path="/sub-admin/signin" element={<SubAdminSignIn />} />
           <Route path="/supervisor/signin" element={<SupervisorSignIn />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+
+          <Route path="/maintenance" element={<MaintenancePage />} />
 
           {/* <Route path="/sub-admin/signup" element={<SubAdminSignUpForm />} /> */}
 

@@ -54,18 +54,26 @@ const SubAdminAppLayout: React.FC = () => {
           }
         );
 
+        console.log(res.status);
+
         if (res.status === 200) {
           setIsSubAdminAuthenticated(true);
-          // redirect only if logged in but not already on an admin page
           if (window.location.pathname === "/sub-admin/signin") {
             window.location.href = "/sub-admin";
           }
-        } else {
+        } else  if (res.status === 423) {
+          window.location.href = "/maintenance";
+          return;
+        }else {
           setIsSubAdminAuthenticated(false);
           window.location.href = "/sub-admin/signin";
         }
-      } catch (err) {
-        console.error("Auth check failed:", err);
+      } catch (err: any) {
+        if (axios.isAxiosError(err) && err.response && err.response.status === 423) {
+          // Redirect to maintenance page if backend reports maintenance mode
+          window.location.href = "/maintenance";
+          return;
+        }
         setIsSubAdminAuthenticated(false);
         window.location.href = "/sub-admin/signin";
       }

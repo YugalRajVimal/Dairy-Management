@@ -4,6 +4,7 @@ import { Link, useLocation } from "react-router";
 // Assume these icons are imported from an icon library
 import {
   ArrowDownIcon,
+  BoltIcon,
   ChevronDownIcon,
 
   GridIcon,
@@ -62,6 +63,14 @@ const navItems: NavItem[] = [
   //   name: "All Sub Admin's Excel Sheets",
   //   path: "/admin/all-excel-sheet/0",
   // },
+
+  
+  {
+    icon: <BoltIcon />,
+    name: "Maintenance",
+    path: "/admin/maintenance",
+  },
+  
   {
     icon: <UserCircleIcon />,
     name: "Admin Profile",

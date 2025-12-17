@@ -48,23 +48,54 @@ function formatAnyDate(val: any, withTime = false) {
 // ---- NEW: "Delete" modal state ----
 type DeleteState = { open: boolean; report: MilkReport | null; loading: boolean; err: string };
 
-// ---- NEW: Bulk Delete Modal state
-type BulkDeleteState = {
+
+
+// Props interface using BulkDeleteState from parent props style
+interface BulkDeleteState {
   open: boolean;
-  date: string; // "YYYY-MM-DD"
+  date: string;
   shift: "" | "Morning" | "Evening";
   error: string;
   confirm: boolean;
   loading: boolean;
   success: string;
-};
+}
 
-export default function SubAdminExcelDataTable() {
+interface SubAdminExcelDataTableProps {
+  startDate: string;
+  setStartDate: React.Dispatch<React.SetStateAction<string>>;
+  endDate: string;
+  setEndDate: React.Dispatch<React.SetStateAction<string>>;
+  shiftFilter: "" | "All" | "Morning" | "Evening";
+  setShiftFilter: React.Dispatch<React.SetStateAction<"" | "All" | "Morning" | "Evening">>;
+  openBulkDeleteModal: () => void;
+  page: number;
+  setPage: React.Dispatch<React.SetStateAction<number>>;
+  bulkDelete: BulkDeleteState;
+  setBulkDelete: React.Dispatch<React.SetStateAction<BulkDeleteState>>;
+  // Add compatible single prop if passed in (optional, to match parent): 
+  BulkDeleteState?: BulkDeleteState;
+}
+
+export default function SubAdminExcelDataTable({
+  startDate,
+
+  endDate,
+
+  shiftFilter,
+
+
+  page,
+  setPage,
+  bulkDelete,
+  setBulkDelete,
+
+}: SubAdminExcelDataTableProps) {
   const API_URL = import.meta.env.VITE_API_URL;
   const [reports, setReports] = useState<MilkReport[]>([]);
   const [columns, setColumns] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
+
   const [limit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
 
@@ -78,16 +109,9 @@ export default function SubAdminExcelDataTable() {
     err: "",
   });
 
-  // NEW: Bulk Delete state
-  const [bulkDelete, setBulkDelete] = useState<BulkDeleteState>({
-    open: false,
-    date: "",
-    shift: "",
-    error: "",
-    confirm: false,
-    loading: false,
-    success: "",
-  });
+
+
+
 
   // Use searchText/setSearchText from SidebarContext
   const { searchText, setSearchText } = useSidebar();
@@ -101,18 +125,7 @@ export default function SubAdminExcelDataTable() {
     setDeleteState({ open: true, report, loading: false, err: "" });
   };
 
-  // Bulk delete modal handlers
-  const openBulkDeleteModal = () => {
-    setBulkDelete({
-      open: true,
-      date: "",
-      shift: "",
-      error: "",
-      confirm: false,
-      loading: false,
-      success: "",
-    });
-  };
+
 
   const closeBulkDeleteModal = () => {
     setBulkDelete({
@@ -164,7 +177,7 @@ export default function SubAdminExcelDataTable() {
         success: "Bulk delete successful!",
       }));
       // Refresh table:
-      fetchReports(page, searchText);
+      fetchReports(page, searchText, startDate, endDate, shiftFilter);
       setTimeout(() => {
         closeBulkDeleteModal();
       }, 1200);
@@ -197,7 +210,7 @@ export default function SubAdminExcelDataTable() {
       );
       // After delete, close modal, refresh
       setDeleteState({ open: false, report: null, loading: false, err: "" });
-      fetchReports(page, searchText);
+      fetchReports(page, searchText, startDate, endDate, shiftFilter);
     } catch (err: any) {
       const msg =
         err?.response?.data?.message ||
@@ -217,6 +230,7 @@ export default function SubAdminExcelDataTable() {
         docDate: editData.docDate,
         shift: editData.shift,
         vlcName: editData.vlcName,
+        vlcUploaderCode: editData.vlcUploaderCode, // <-- ADDED as per instruction
         milkWeightLtr: editData.milkWeightLtr,
         fatPercentage: editData.fatPercentage,
         snfPercentage: editData.snfPercentage,
@@ -234,7 +248,7 @@ export default function SubAdminExcelDataTable() {
       );
 
       setIsEditModalOpen(false);
-      fetchReports(page, searchText); // refresh table
+      fetchReports(page, searchText, startDate, endDate, shiftFilter); // refresh table
     } catch (err) {
       console.error("Error updating milk report:", err);
     }
@@ -254,17 +268,31 @@ export default function SubAdminExcelDataTable() {
     "history",
   ];
 
-  const fetchReports = async (pageNumber: number, searchText = "") => {
+  // ---- EDIT: fetchReports now supports filters ----
+  const fetchReports = async (
+    pageNumber: number,
+    searchText: string = "",
+    startDateParam: string = "",
+    endDateParam: string = "",
+    shiftParam: "" | "All" | "Morning" | "Evening" = "All"
+  ) => {
     try {
       setLoading(true);
+
+      // Compose filter params
+      const params: Record<string, any> = {
+        page: pageNumber,
+        limit,
+        search: searchText,
+      };
+      if (startDateParam) params.startDate = startDateParam;
+      if (endDateParam) params.endDate = endDateParam;
+      if (shiftParam && shiftParam !== "All") params.shift = shiftParam;
+
       const res = await axios.get(
         `${API_URL}/api/sub-admin/get-uploaded-milk-report`,
         {
-          params: {
-            page: pageNumber,
-            limit,
-            search: searchText,
-          },
+          params,
           headers: { Authorization: localStorage.getItem("sub-admin-token") ?? undefined },
         }
       );
@@ -297,11 +325,11 @@ export default function SubAdminExcelDataTable() {
     }).format(date);
   };
 
-  // Fetch when page or search text changes
+  // Fetch when page or filters change
   useEffect(() => {
-    fetchReports(page, searchText);
+    fetchReports(page, searchText, startDate, endDate, shiftFilter);
     // eslint-disable-next-line
-  }, [page]);
+  }, [page, startDate, endDate, shiftFilter]);
 
   useEffect(() => {
     // console.log(searchText);
@@ -310,15 +338,15 @@ export default function SubAdminExcelDataTable() {
   // Debounced fetch on searchText change (always reset to page 1)
   useEffect(() => {
     const delay = setTimeout(() => {
-      fetchReports(1, searchText);
+      fetchReports(1, searchText, startDate, endDate, shiftFilter);
       setPage(1);
     }, 400);
 
     return () => clearTimeout(delay);
     // eslint-disable-next-line
-  }, [searchText]);
+  }, [searchText, startDate, endDate, shiftFilter]);
 
-  // Use searchText for filter
+  // Use searchText for filter (local filtering for display, not API)
   const filterText = searchText.trim().toLowerCase();
   const filteredReports = filterText
     ? reports.filter((row) => {
@@ -365,16 +393,7 @@ export default function SubAdminExcelDataTable() {
           </p>
         </div>
 
-        <div>
-          <div className="flex items-center px-5 py-4 gap-4 bg-gray-50 dark:bg-gray-800">
-            <Button
-              className="px-4 py-2 bg-red-700"
-              onClick={openBulkDeleteModal}
-            >
-              Bulk Delete
-            </Button>
-          </div>
-        </div>
+    
       </div>
 
       {/* TABLE CARD */}
@@ -726,6 +745,7 @@ export default function SubAdminExcelDataTable() {
               { label: "Document Date", key: "docDate", type: "date" },
               { label: "Shift", key: "shift", type: "text" },
               { label: "VLC Name", key: "vlcName", type: "text" },
+              { label: "VLC Uploader Code", key: "vlcUploaderCode", type: "text" }, // ADDED FIELD
               {
                 label: "Milk Weight (Ltr)",
                 key: "milkWeightLtr",
