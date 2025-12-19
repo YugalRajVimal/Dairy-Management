@@ -25,7 +25,7 @@ function Modal({
 }) {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center px-4">
+    <div className="fixed inset-0 z-50 bg-black/40 flex items-start mb-10 justify-center px-4 h-screen overflow-y-auto">
       <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg min-w-[320px] max-w-md w-full">
         {title && <div className="p-4 border-b border-gray-200 font-bold text-lg">{title}</div>}
         <div className="p-4">{children}</div>
@@ -397,8 +397,9 @@ export default function SubAdminList() {
         open={editModalOpen}
         onClose={() => setEditModalOpen(false)}
         title="Edit Sub Admin"
+        
       >
-        <form onSubmit={handleEditSubmit}>
+        <form onSubmit={handleEditSubmit} className="overflow-y-auto ">
           <LabeledInput
             label="Name"
             name="name"
