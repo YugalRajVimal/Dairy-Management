@@ -29,7 +29,8 @@ export default function SignInForm() {
 
   // Timer state for resend (in seconds)
   const [resendTimer, setResendTimer] = useState<number>(0);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  // Use a number (from setTimeout) instead of NodeJS.Timeout to avoid TS2503 error
+  const timerRef = useRef<number | null>(null);
 
   // For managing disabling all form during sending
   const [loading, setLoading] = useState<boolean>(false);
@@ -37,15 +38,15 @@ export default function SignInForm() {
   // Clear timer on unmount
   useEffect(() => {
     return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
+      if (timerRef.current !== null) clearTimeout(timerRef.current);
     };
   }, []);
 
   // Handle timer countdown
   useEffect(() => {
     if (resendTimer > 0) {
-      timerRef.current = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
-    } else if (timerRef.current) {
+      timerRef.current = window.setTimeout(() => setResendTimer(resendTimer - 1), 1000);
+    } else if (timerRef.current !== null) {
       clearTimeout(timerRef.current);
     }
   }, [resendTimer]);

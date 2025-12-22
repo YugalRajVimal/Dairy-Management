@@ -14,6 +14,9 @@ interface AlertState {
   message: string;
 }
 
+// Define a browser-safe type for timer ref
+type TimerRef = ReturnType<typeof setTimeout> | null;
+
 export default function SignInForm() {
   const navigate = useNavigate();
   const [email, setEmail] = useState<string>("");
@@ -28,7 +31,7 @@ export default function SignInForm() {
   });
 
   const [resendTimer, setResendTimer] = useState<number>(0);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const timerRef = useRef<TimerRef>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
