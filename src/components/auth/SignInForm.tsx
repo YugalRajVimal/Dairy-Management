@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router";
 import axios from "axios";
 
@@ -27,6 +27,22 @@ export default function SignInForm() {
     message: "",
   });
 
+  const [resendTimer, setResendTimer] = useState<number>(0);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (resendTimer > 0) {
+      timerRef.current = setTimeout(() => setResendTimer(resendTimer - 1), 1000);
+    } else if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+    // avoid memory leaks
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [resendTimer]);
+
   const clearAlert = () => {
     setAlert({
       isEnable: false,
@@ -36,8 +52,8 @@ export default function SignInForm() {
     });
   };
 
-  // Send OTP
-  const handleGetOTP = async () => {
+  // Send OTP (for both initial & resend)
+  const handleSendOTP = async () => {
     clearAlert();
     if (!email) {
       return setAlert({
@@ -47,7 +63,7 @@ export default function SignInForm() {
         message: "Please enter your email address.",
       });
     }
-
+    setLoading(true);
     try {
       const res = await axios.post(
         `${import.meta.env.VITE_API_URL}/api/auth/signin`,
@@ -61,6 +77,7 @@ export default function SignInForm() {
         message: res.data.message || "OTP sent to your email!",
       });
       setIsOTPFormVisible(true);
+      setResendTimer(60); // Start timer for 1 minute
     } catch (err: any) {
       setAlert({
         isEnable: true,
@@ -68,6 +85,8 @@ export default function SignInForm() {
         title: "Error",
         message: err.response?.data?.message || "Failed to send OTP.",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -83,7 +102,7 @@ export default function SignInForm() {
         message: "Please enter both email and OTP.",
       });
     }
-
+    setLoading(true);
     try {
       const res = await axios.post(
         `${import.meta.env.VITE_API_URL}/api/auth/verify-account`,
@@ -96,7 +115,6 @@ export default function SignInForm() {
         title: "Success",
         message: res.data.message || "OTP verified successfully!",
       });
-
 
       // Store token in localStorage
       if (res.data.token) {
@@ -113,6 +131,8 @@ export default function SignInForm() {
         message:
           err.response?.data?.message || "Invalid OTP. Please try again.",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -148,6 +168,7 @@ export default function SignInForm() {
                 placeholder="info@gmail.com"
                 name="email"
                 value={email}
+                disabled={loading}
                 onChange={(e) => {
                   setEmail(e.target.value);
                   clearAlert();
@@ -164,6 +185,7 @@ export default function SignInForm() {
                 placeholder="Enter OTP"
                 name="otp"
                 value={otp}
+                disabled={loading}
                 onChange={(e) => {
                   setOTP(e.target.value);
                   clearAlert();
@@ -171,13 +193,27 @@ export default function SignInForm() {
               />
             </div>
 
-            <div>
+            <div className="flex gap-2 flex-col">
+              {/* If OTP requested already, show verify and resend controls */}
               {isOTPFieldsVisible ? (
-                <Button onClick={handleLogIn} className="w-full" size="sm">
-                  Verify & Sign In
-                </Button>
+                <>
+                  <Button onClick={handleLogIn} className="w-full" size="sm" disabled={loading}>
+                    Verify & Sign In
+                  </Button>
+                  <Button
+                    onClick={handleSendOTP}
+                    className="w-full"
+                    size="sm"
+                    variant="outline"
+                    disabled={resendTimer > 0 || loading}
+                  >
+                    {resendTimer > 0
+                      ? `Resend OTP (${resendTimer}s)`
+                      : "Resend OTP"}
+                  </Button>
+                </>
               ) : (
-                <Button onClick={handleGetOTP} className="w-full" size="sm">
+                <Button onClick={handleSendOTP} className="w-full" size="sm" disabled={loading}>
                   Get OTP
                 </Button>
               )}

@@ -403,24 +403,29 @@ export default function SubAdminExcelDataTable({
             {/* HEADER */}
             <TableHeader className="bg-gray-100 dark:bg-gray-800 sticky top-0 z-10">
               <TableRow>
+              <TableCell
+                  isHeader
+                  className="px-5 py-3 font-semibold uppercase text-xs"
+                >
+                  Action
+                </TableCell>
                 {columns
                   .filter((c) => c !== "edited")
                   .map((col) => (
                     <TableCell
                       key={col}
                       isHeader
-                      className="px-5 py-3 font-semibold uppercase text-xs text-gray-600 dark:text-gray-300"
+                      className={`
+                        px-5 py-3 font-semibold uppercase text-xs
+                        text-gray-600 dark:text-gray-300
+                     
+                      `}
                     >
                       {col}
                     </TableCell>
                   ))}
 
-                <TableCell
-                  isHeader
-                  className="px-5 py-3 font-semibold uppercase text-xs"
-                >
-                  Action
-                </TableCell>
+               
 
                 {columns.includes("edited") && (
                   <TableCell
@@ -440,20 +445,8 @@ export default function SubAdminExcelDataTable({
                   key={idx}
                   className="hover:bg-gray-50 dark:hover:bg-gray-800/50 dark:text-white transition"
                 >
-                  {columns
-                    .filter((c) => c !== "edited")
-                    .map((col) => (
-                      <TableCell key={col} className="px-4 py-3">
-                        {
-                          // Format any date found, or else show as string
-                          (col === "uploadedOn" || col === "createdAt" || col.toLowerCase().includes("date") || isDateLike(row[col]))
-                            ? formatAnyDate(row[col], col === "uploadedOn" || col.toLowerCase() === "createdat" || col === "createdAt" || col === "uploadedOn" ? true : false)
-                            : row[col] ?? ""
-                        }
-                      </TableCell>
-                    ))}
 
-                  <TableCell className="px-4 py-3 flex flex-col gap-1 py-auto">
+<TableCell className="px-4 py-3 flex flex-col gap-1 py-auto">
                     <Button
                       className="!px-3 !py-1"
                       onClick={() => openEditModal(row)}
@@ -467,6 +460,34 @@ export default function SubAdminExcelDataTable({
                       Delete
                     </Button>
                   </TableCell>
+
+                  {columns
+                    .filter((c) => c !== "edited")
+                    .map((col) => {
+                      // Only apply special background for "shift" column
+                      let extraClass = "";
+                      if (
+                        col.toLowerCase() === "shift" &&
+                        typeof row[col] === "string"
+                      ) {
+                        if (row[col].toLowerCase() === "morning") {
+                          extraClass = "bg-yellow-100 dark:bg-yellow-900/30";
+                        } else if (row[col].toLowerCase() === "evening") {
+                          extraClass = "bg-blue-100 dark:bg-blue-900/30";
+                        }
+                      }
+                      return (
+                        <TableCell key={col} className={`px-4 py-3 ${extraClass}`}>
+                          {
+                            // Format any date found, or else show as string
+                            (col === "uploadedOn" || col === "createdAt" || col.toLowerCase().includes("date") || isDateLike(row[col]))
+                              ? formatAnyDate(row[col], col === "uploadedOn" || col.toLowerCase() === "createdat" || col === "createdAt" || col === "uploadedOn" ? true : false)
+                              : row[col] ?? ""
+                          }
+                        </TableCell>
+                      );
+                    })}
+
 
                   {columns.includes("edited") && (
                     <TableCell className="px-4 py-3 text-center">
